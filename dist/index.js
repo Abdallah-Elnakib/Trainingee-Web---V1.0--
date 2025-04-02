@@ -27,7 +27,7 @@ mongoose_1.default.connection.once('open', () => {
     console.log('Database connected successfully...................');
     const port = process.env.PORT || 3000;
     exports.app.listen(port, () => {
-        console.log(`🚀 Auth-Server is running on port ${port}...........`);
+        console.log(`🚀 Server is running on port ${port}...........`);
     });
 });
 mongoose_1.default.connection.on('error', (error) => {
