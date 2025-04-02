@@ -2,7 +2,7 @@ import mailSender from './mailSender';
 
 export async function sendVerificationEmail(email: string, token: string) {
     try {
-      const resetPasswordUrl = `http://auth-service:3000/reset-password?token=${token}`;
+      const resetPasswordUrl = `http://127.0.0.1:3000/api/auth/reset-password?token=${token}`;
       const mailResponse = await mailSender(
         email,
         "Reset Password",

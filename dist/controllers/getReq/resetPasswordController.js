@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resetPassword = void 0;
 const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    res.status(200).json({ message: "Reset password email sent successfully" });
+    res.status(200).render('resetPassword.ejs');
     return;
 });
 exports.resetPassword = resetPassword;

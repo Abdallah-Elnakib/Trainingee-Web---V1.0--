@@ -17,7 +17,7 @@ const mailSender_1 = __importDefault(require("./mailSender"));
 function sendVerificationEmail(email, token) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const resetPasswordUrl = `http://auth-service:3000/reset-password?token=${token}`;
+            const resetPasswordUrl = `http://127.0.0.1:3000/api/auth/reset-password?token=${token}`;
             const mailResponse = yield (0, mailSender_1.default)(email, "Reset Password", `<h1>Reset Your Password</h1>
          <p>Click the button below to reset your password:</p>
          <a href="${resetPasswordUrl}" style="display: inline-block; padding: 10px 20px; font-size: 16px; color: white; background-color: blue; text-decoration: none; border-radius: 5px;">Reset Password</a>`);
