@@ -1,0 +1,37 @@
+{
+  "name": "trainingee-web---v1.0--",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc",
+    "start": "npx tsc && nodemon dist/index.js",
+    "dev": "nodemon dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdallah-Elnakib/Trainingee-Web---V1.0--.git"
+  },
+  "keywords": [],
+  "author": "Abdallah Elnakib",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Abdallah-Elnakib/Trainingee-Web---V1.0--/issues"
+  },
+  "homepage": "https://github.com/Abdallah-Elnakib/Trainingee-Web---V1.0--#readme",
+  "description": "",
+  "dependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.13.17",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.13.1",
+    "nodemon": "^3.1.9",
+    "trainingee-web---v1.0--": "file:",
+    "typescript": "^5.8.2"
+  }
+}
