@@ -17,6 +17,7 @@ const userSchemaMongo = new mongoose.Schema({
     email: { type: String, required: true },
     password: { type: String, required: true },
     role: { type: String, required: true },
+    resetPasswordToken: { type: String , createdAt: { type: Date, default: Date.now, expires: '1h' },},
 })
 
 export const Users = mongoose.model("Users", userSchemaMongo);
