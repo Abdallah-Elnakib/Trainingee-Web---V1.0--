@@ -222,7 +222,7 @@
         }
 
     </style>
-    <title>Reset Password</title>
+    <title>Login</title>
 </head>
 <body>
     <section class="container">
@@ -230,12 +230,15 @@
             <div class="circle circle-one"></div>
             <div class="form-container">
                 <img src="https://raw.githubusercontent.com/hicodersofficial/glassmorphism-login-form/master/assets/illustration.png" alt="illustration" class="illustration" />
-                <h1 class="opacity">Reset Password</h1>
+                <h1 class="opacity">LOGIN</h1>
                 <form>
-                    <input type="text" placeholder="New Password" id="newPassword" />
-                    <input type="password" placeholder="Confirm Password" id ="confirmPassword" />
+                    <input type="text" placeholder="Email" id="username"/>
+                    <input type="password" placeholder="PASSWORD" id="password" />
                     <button class="opacity" id="submit">SUBMIT</button>
                 </form>
+                <div class="register-forget opacity">
+                    <a href="http://127.0.0.1:3000/api/auth/forgot-Password">FORGOT PASSWORD</a>
+                </div>
             </div>
             <div class="circle circle-two"></div>
         </div>
@@ -295,28 +298,38 @@
         };
         displayThemeButtons();
 
-        const resetPasswordForm = document.getElementById('submit');
-
-        resetPasswordForm.addEventListener('click', async (event) => {
+        const loginForm = document.getElementById("submit");
+        loginForm.addEventListener("click", async = (event) => {
             event.preventDefault();
-            const searchParams = window.location.search;
-            const token = searchParams.split('=')[1];
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            console.log(newPassword, confirmPassword);
-            const response = await fetch(`http://127.0.0.1:3000/api/auth/reset-password?token=${token}`, {
-                method: 'POST',
+            const email = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            console.log(email, password);
+            fetch("http://127.0.0.1:3000/api/auth/Login", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ newPassword, confirmPassword }), 
-            }); 
-            const data = await response.json();
-            alert(data.message);
-            if (data.message === "Password reset successfully") {
-                window.location.href = "http://127.0.0.1:3000/api/auth/login";
-            }
+                body: JSON.stringify({ email, password }),
+            })
+                .then((response) => {
+                    console.log(response);
+                    if (response.status === 200) {
+                        window.location.href = "http://127.0.0.1:3000/api/auth/dashboard";
+                        return;
+                    }
+                    else {
+                        return response.json().then((data) => {
+                            alert(data.message);
+                        });
+                    }
+                })
+                
+                .catch((error) => {
+                    console.log(error);
+                    alert(data.message);
+                });
         });
+
     </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import {Users} from '../models/userModel';
+import {Users} from '../../../models/userModel';
 import jwt from 'jsonwebtoken';
-import {sendVerificationEmail}  from '../utils/mailesFormulas';
+import {sendVerificationEmail}  from '../../../utils/mailesFormulas';
 export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email } = req.body;

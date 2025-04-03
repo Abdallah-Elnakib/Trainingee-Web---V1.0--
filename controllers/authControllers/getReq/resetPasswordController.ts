@@ -1,4 +1,4 @@
-import e, { Request, Response } from 'express';
+import  { Request, Response } from 'express';
 
 
 export const resetPassword = async (req: Request, res: Response): Promise<void> => {

@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { Users } from '../models/userModel';
+import { Users } from '../../../models/userModel';
 import jwt from 'jsonwebtoken';
 
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;
-
         if (!email || !password) {
             res.status(400).json({ message: 'Email and password are required' });
             return;
@@ -38,7 +37,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         
         req.session.refreshToken = REFRESH_TOKEN;
 
-        res.status(201).json({ 
+        res.status(200).json({ 
             ACCESS_TOKEN,
             REFRESH_TOKEN,
             user: {

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { userSchema } from '../models/userModel';
+import { userSchema } from '../../../models/userModel';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { Users } from '../models/userModel';
+import { Users } from '../../../models/userModel';
 
 declare module 'express-session' {
   interface SessionData {
