@@ -6,6 +6,7 @@ import { connDB } from './config/connDB';
 import cors from 'cors';
 import session from 'express-session';
 import auth from './router/authRouter';
+import tracks from './router/TracksRouter'
 import path from 'path';
 
 export const app: Express = express();
@@ -21,9 +22,10 @@ app.use(session({
     cookie: { secure: process.env.NODE_ENV === 'production' }
   }));
   
-app.use('/api/auth', express.static(path.join(__dirname, 'public')));
+app.use('/api', express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', auth);
+app.use('/api/tracks', tracks)
 
 mongoose.connection.once('open', () => {
     console.log('Database connected successfully...................');

@@ -12,6 +12,7 @@ const connDB_1 = require("./config/connDB");
 const cors_1 = __importDefault(require("cors"));
 const express_session_1 = __importDefault(require("express-session"));
 const authRouter_1 = __importDefault(require("./router/authRouter"));
+const TracksRouter_1 = __importDefault(require("./router/TracksRouter"));
 const path_1 = __importDefault(require("path"));
 exports.app = (0, express_1.default)();
 (0, connDB_1.connDB)();
@@ -23,8 +24,9 @@ exports.app.use((0, express_session_1.default)({
     saveUninitialized: true,
     cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
-exports.app.use('/api/auth', express_1.default.static(path_1.default.join(__dirname, 'public')));
+exports.app.use('/api', express_1.default.static(path_1.default.join(__dirname, 'public')));
 exports.app.use('/api/auth', authRouter_1.default);
+exports.app.use('/api/tracks', TracksRouter_1.default);
 mongoose_1.default.connection.once('open', () => {
     console.log('Database connected successfully...................');
     const port = process.env.PORT || 3000;
