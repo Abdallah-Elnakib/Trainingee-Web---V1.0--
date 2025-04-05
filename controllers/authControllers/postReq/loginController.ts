@@ -24,13 +24,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         }
 
         const ACCESS_TOKEN = jwt.sign(
-            { userId: user._id, role: user.role }, 
+            { userId: user._id, role: user.role ,firstName: user.firstName, lastName: user.lastName}, 
             process.env.ACCESS_TOKEN_SECRET as string, 
             { expiresIn: "15m" }
         );
                 
         const REFRESH_TOKEN = jwt.sign(
-            { userId: user._id, role: user.role }, 
+            { userId: user._id, role: user.role ,firstName: user.firstName, lastName: user.lastName}, 
             process.env.REFRESH_TOKEN_SECRET as string, 
             { expiresIn: "7d" }
         );

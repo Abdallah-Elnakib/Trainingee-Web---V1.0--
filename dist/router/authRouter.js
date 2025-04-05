@@ -11,12 +11,18 @@ const forgotPasswordController_2 = require("../controllers/authControllers/getRe
 const resetPasswordController_1 = require("../controllers/authControllers/getReq/resetPasswordController");
 const loginController_2 = require("../controllers/authControllers/getReq/loginController");
 const resetPasswordController_2 = require("../controllers/authControllers/postReq/resetPasswordController");
+const homeController_1 = require("../controllers/authControllers/getReq/homeController");
+const logoutController_1 = require("../controllers/authControllers/getReq/logoutController");
+const verifyJWT_1 = require("../middleware/verifyJWT");
 const router = express_1.default.Router();
 router.post('/Signup', signupController_1.signup);
 router.post('/Login', loginController_1.login);
 router.get('/Login', loginController_2.loginForm);
+router.get('/logout', logoutController_1.logout);
 router.post('/forgot-Password', forgotPasswordController_1.forgotPassword);
 router.get('/forgot-Password', forgotPasswordController_2.forgotPasswordform);
 router.get('/reset-Password', resetPasswordController_1.resetPassword);
 router.post('/reset-Password', resetPasswordController_2.resetPasswordInDatabase);
+router.use(verifyJWT_1.verifyJWT); // Middleware to verify JWT for all routes below this line
+router.get('/home', homeController_1.home);
 exports.default = router;
