@@ -13,12 +13,12 @@ exports.getAllTracksFromDB = void 0;
 const tracksSchema_1 = require("../models/tracksSchema");
 const getAllTracksFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const trackName = [];
+        const data = [];
         const tracks = yield tracksSchema_1.Track.find();
         for (const track of tracks) {
-            trackName.push(track.trackName);
+            data.push({ trackName: track.trackName, studentNum: track.trackData.length, trackData: track.trackData });
         }
-        return trackName;
+        return data;
     }
     catch (error) {
         console.error('Error fetching tracks:', error);

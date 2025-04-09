@@ -12,10 +12,9 @@ export const Track = mongoose.model('Tracks', trackSchema)
 export const addStudentSchema = z.object({
     Id : z.number().min(1, 'ID Is Required'),
     Name : z.string().min(1, 'Name Is Required'),
-    Degrees : z.number().optional(),
-    Additional : z.number().optional(),
-    BasicTotal : z.number().min(1, 'Basic Total Is Required'),
-    TotalDegrees : z.number().optional(),
-    Comments : z.string().optional(),
-    Ranking : z.number().min(1, 'Ranking Is Required')
-})
+    Degrees : z.number().min(0, 'Degrees Is Required'),
+    Additional : z.number().min(0, 'Additional Is Required'),
+    BasicTotal : z.number().min(0, 'Basic Total Is Required'),
+    TotalDegrees : z.number().min(0, 'Total Degrees Is Required'),
+    Comments : z.string().min(1, 'Comments Is Required'),
+}).strict();

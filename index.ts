@@ -7,6 +7,7 @@ import cors from 'cors';
 import session from 'express-session';
 import auth from './router/authRouter';
 import tracks from './router/TracksRouter'
+import students from './router/studentsRouter'
 import path from 'path';
 
 export const app: Express = express();
@@ -26,6 +27,7 @@ app.use('/api', express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', auth);
 app.use('/api/tracks', tracks)
+app.use('/api/students', students)
 
 mongoose.connection.once('open', async () => {
     console.log('Database connected successfully...................');

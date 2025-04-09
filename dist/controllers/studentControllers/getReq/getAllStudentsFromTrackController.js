@@ -9,25 +9,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.home = void 0;
-const getAllTracksFromDB_1 = require("../../../utils/getAllTracksFromDB");
-const home = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getAllStudentsFromTrack = void 0;
+const tracksSchema_1 = require("../../../models/tracksSchema");
+const getAllStudentsFromTrack = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const tracks = yield (0, getAllTracksFromDB_1.getAllTracksFromDB)();
-        if (!tracks) {
-            res.status(200).render('home.ejs', {
-                user: req.user, Tracks: "No tracks"
-            });
+        const { trackName } = req.params;
+        if (!trackName) {
+            res.status(400).json({ message: "Track name is required" });
             return;
         }
-        res.status(200).render('home.ejs', {
-            user: req.user, Tracks: tracks
-        });
-        return;
+        const trackFromDB = yield tracksSchema_1.Track.findOne({ trackName });
+        if (!trackFromDB) {
+            res.status(404).json({ message: "Track not found" });
+            return;
+        }
+        res.status(200).json({ students: trackFromDB.trackData });
     }
     catch (error) {
-        console.error('Error fetching tracks:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        console.error("Error fetching students:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 });
-exports.home = home;
+exports.getAllStudentsFromTrack = getAllStudentsFromTrack;
