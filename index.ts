@@ -27,7 +27,7 @@ app.use('/api', express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', auth);
 app.use('/api/tracks', tracks)
 
-mongoose.connection.once('open', () => {
+mongoose.connection.once('open', async () => {
     console.log('Database connected successfully...................');
     const port = process.env.PORT || 3000;
     app.listen(port, () => {
