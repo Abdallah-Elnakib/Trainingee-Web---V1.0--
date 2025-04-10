@@ -50,23 +50,36 @@ const displayThemeButtons = () => {
     });
 };
 displayThemeButtons();
-const resetPasswordForm = document.getElementById('submit');
 
-resetPasswordForm.addEventListener('click', async (event) => {
+const loginForm = document.getElementById("submit");
+loginForm.addEventListener("click", async = (event) => {
     event.preventDefault();
-    const email = document.getElementById('email').value;
-    const response = await fetch('http://127.0.0.1:3000/api/auth/forgot-password', {
-        method: 'POST',
+    const email = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    console.log(email, password);
+    fetch("http://127.0.0.1:3000/api/auth/Login", {
+        method: "POST",
         headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
+    })
+        .then((response) => {
+            console.log(response);
+            if (response.status === 200) {
+                window.location.href = "http://127.0.0.1:3000/api/auth/home";
+                return;
+            }
+            else {
+                return response.json().then((data) => {
+                    alert(data.message);
+                });
+            }
+        })
 
-    });
-    const data = await response.json();
-    alert(data.message);
-    if (data.message === "Reset password email sent successfully") {
-        window.location.href = "http://127.0.0.1:3000/api/auth/login";
-    }
+        .catch((error) => {
+            console.log(error);
+            alert(data.message);
+        });
 });
 

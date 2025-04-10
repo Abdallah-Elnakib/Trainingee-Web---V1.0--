@@ -24,18 +24,33 @@ const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             res.status(404).json({ message: "Track not found" });
             return;
         }
-        let Space = 0;
-        for (const Name of studentName) {
-            if (Name === " ") {
-                Space += 1;
+        let spaceCount = 0;
+        for (const char of studentName) {
+            if (char === " ") {
+                spaceCount += 1;
             }
         }
-        if (Space <= 1) {
+        if (spaceCount <= 2) {
             res.status(400).json({ message: "The student's full name must be entered." });
             return;
         }
+        const allTracks = yield tracksSchema_2.Track.find();
+        let existingStudentId = null;
+        let studentMaxId = 0;
+        for (const track of allTracks) {
+            const existingStudent = track.trackData.find(student => student.Name === studentName);
+            if (existingStudent) {
+                existingStudentId = existingStudent.ID;
+                break;
+            }
+            else {
+                const maxId = track.trackData.length;
+                studentMaxId += maxId;
+            }
+        }
+        const studentId = existingStudentId || (yield tracksSchema_2.Track.aggregate([{ $unwind: "$trackData" }, { $group: { _id: null, maxId: { $max: "$trackData.ID" } } }]).then(result => { var _a; return (((_a = result[0]) === null || _a === void 0 ? void 0 : _a.maxId) || 0) + 1; }));
         const Student = {
-            ID: gitTrackFromDB.trackData.length + 1,
+            ID: studentId,
             Name: studentName || "Unknown",
             Degrees: 0,
             Additional: 0,
@@ -43,14 +58,22 @@ const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             TotalDegrees: 0,
             Comments: "No comments"
         };
-        const parsedStudentData = tracksSchema_1.addStudentSchema.safeParse({ Id: Student.ID, Name: Student.Name, Degrees: Student.Degrees, Additional: Student.Additional, BasicTotal: Student.BasicTotal, TotalDegrees: Student.TotalDegrees, Comments: Student.Comments });
+        const parsedStudentData = tracksSchema_1.addStudentSchema.safeParse({
+            Id: Student.ID,
+            Name: Student.Name,
+            Degrees: Student.Degrees,
+            Additional: Student.Additional,
+            BasicTotal: Student.BasicTotal,
+            TotalDegrees: Student.TotalDegrees,
+            Comments: Student.Comments
+        });
         if (!parsedStudentData.success) {
             res.status(400).json({ message: "Invalid student data", errors: parsedStudentData.error.errors[0] });
             return;
         }
-        const studentExists = gitTrackFromDB.trackData.some((student) => student.Name === parsedStudentData.data.Name);
-        if (studentExists) {
-            res.status(400).json({ message: "Student already exists" });
+        const studentExistsInTrack = gitTrackFromDB.trackData.some(student => student.Name === parsedStudentData.data.Name);
+        if (studentExistsInTrack) {
+            res.status(400).json({ message: "Student already exists in this track" });
             return;
         }
         gitTrackFromDB.trackData.push(Student);

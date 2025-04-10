@@ -23,7 +23,6 @@ const express_session_1 = __importDefault(require("express-session"));
 const authRouter_1 = __importDefault(require("./router/authRouter"));
 const TracksRouter_1 = __importDefault(require("./router/TracksRouter"));
 const studentsRouter_1 = __importDefault(require("./router/studentsRouter"));
-const path_1 = __importDefault(require("path"));
 exports.app = (0, express_1.default)();
 (0, connDB_1.connDB)();
 exports.app.use(express_1.default.json());
@@ -34,7 +33,7 @@ exports.app.use((0, express_session_1.default)({
     saveUninitialized: true,
     cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
-exports.app.use('/api', express_1.default.static(path_1.default.join(__dirname, 'public')));
+exports.app.use(express_1.default.static('public'));
 exports.app.use('/api/auth', authRouter_1.default);
 exports.app.use('/api/tracks', TracksRouter_1.default);
 exports.app.use('/api/students', studentsRouter_1.default);
