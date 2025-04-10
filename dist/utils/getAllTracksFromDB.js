@@ -16,7 +16,17 @@ const getAllTracksFromDB = () => __awaiter(void 0, void 0, void 0, function* () 
         const data = [];
         const tracks = yield tracksSchema_1.Track.find();
         for (const track of tracks) {
-            data.push({ trackName: track.trackName, studentNum: track.trackData.length, trackData: track.trackData });
+            for (const student of track.trackData) {
+                student.TotalDegrees = student.Degrees + student.Additional;
+            }
+            track.trackData.sort((a, b) => b.TotalDegrees - a.TotalDegrees);
+            track.markModified('trackData');
+            yield track.save();
+            data.push({
+                trackName: track.trackName,
+                studentNum: track.trackData.length,
+                trackData: track.trackData,
+            });
         }
         return data;
     }

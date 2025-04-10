@@ -109,7 +109,7 @@
                 </div>
                 <div class="flex items-center space-x-3 sm:mt-7 mt-4">
                   <a href="#" class="px-3 border-b-2 border-blue-500 text-blue-500 dark:text-white dark:border-white pb-1.5">All Students</a>
-                  <a href="#" class="px-3 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5">ِAdd Students</a>
+                  <a href="#" class="px-3 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5">Add Students</a>
                   <a href="#" class="px-3 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5 sm:block hidden">Delete Students</a>
                   <a href="#" class="px-3 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5 sm:block hidden">Add Task</a>
                   <a href="#" class="px-3 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5 sm:block hidden">Refresh</a>
@@ -150,25 +150,41 @@
                           <th class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800">Ranking</th>
                         </tr>
                       </thead>
+                    <% Ranking = 0%>
                     <% for (const students of track.trackData) { %>
+                     <% Ranking += 1 %> 
                       <tbody class="text-gray-600 dark:text-gray-100">
                         <tr>
-                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800">
-                            <div class="flex items-center">
-                              <%= students.ID %>
-                            </div>
-                          </td>
+                            <% if (students.Degrees < students.BasicTotal * 0.85 && students.Degrees >= students.BasicTotal * 0.75) { %>
+                              <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800" style="background-color: rgb(209, 192, 67); color: white;">
+                                <div class="flex items-center">
+                                  <%= students.ID %>
+                                </div>
+                              </td>
+                            <% } else if (students.Degrees < students.BasicTotal * 0.85 && students.Degrees > students.BasicTotal * 0.75) { %>
+                              <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800" style="background-color: red; color: white;">
+                                <div class="flex items-center">
+                                  <%= students.ID %>
+                                </div>
+                              </td>
+                            <% } else { %>
+                              <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800" style="background-color: green; color: white;">
+                                <div class="flex items-center">
+                                  <%= students.ID %>
+                                </div>
+                              </td>
+                            <% } %>
                           <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800">
                             <div class="flex items-center">
                               <%= students.Name %>
                             </div>
                           </td>
                           <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden"><%= students.Degrees %></td>
-                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 text-red-500"><%= students.Additional %></td>
-                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 text-red-500"><%= students.BasicTotal %></td>
-                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 text-red-500"><%= students.TotalDegrees %></td>
-                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 text-red-500"><%= students.Comments %></td>
-                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 text-red-500"><%= 0 %></td>
+                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden"><%= students.Additional %></td>
+                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden"><%= students.BasicTotal %></td>
+                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden"><%= students.TotalDegrees %></td>
+                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden"><%= students.Comments %></td>
+                          <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden"><%= Ranking %></td>
                         </tr>
                       </tbody>
                     <% } %> 
@@ -209,8 +225,120 @@
             document.getElementsByClassName('flex items-center text-3xl text-gray-900 dark:text-white')[0].innerText = track.innerText;
           })
         }
-        
+        document.addEventListener("DOMContentLoaded", () => {
+          const tableCells = document.querySelectorAll("td");
 
+          tableCells.forEach(cell => {
+            cell.addEventListener("dblclick", () => {
+              const columnIndex = Array.from(cell.parentNode.children).indexOf(cell);
+              const editableFields = [1, 2, 3, 6, 4]; 
+
+              if (!editableFields.includes(columnIndex)) {
+                alert("You can only edit the Name, Degrees, Additional Or Comments fields.");
+                return;
+              }
+
+              if (cell.querySelector("input")) return;
+
+              const originalValue = cell.textContent.trim();
+              const input = document.createElement("input");
+              input.type = "text";
+              input.value = originalValue;
+              input.className = "w-full bg-transparent text-inherit border border-blue-300 px-1 rounded";
+
+              cell.innerHTML = "";
+              cell.appendChild(input);
+              input.focus();
+
+              input.addEventListener("blur", () => {
+                const newValue = input.value.trim();
+                cell.innerHTML = newValue;
+
+                if (newValue !== originalValue) {
+                  updateCell(cell, newValue);
+                }
+              });
+
+              input.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") input.blur();
+              });
+            });
+          });
+        });
+
+        function updateCell(cell, newValue) {
+          const row = cell.closest("tr");
+          const table = cell.closest("table");
+          const trackName = table.id;
+          const studentId = row.children[0].textContent.trim();
+          const columnIndex = Array.from(cell.parentNode.children).indexOf(cell);
+          const fieldMap = ["ID", "Name", "Degrees", "Additional", "BasicTotal", "TotalDegrees", "Comments", "Ranking"];
+          const fieldName = fieldMap[columnIndex];
+
+          if (fieldName === 'Degrees' || fieldName === "Additional") {
+            newValue = Number(newValue);
+          }
+
+          console.log(`Table ID: ${trackName}, Student ID: ${studentId}, Field: ${fieldName}, New Value: ${newValue}`);
+
+          fetch(`http://127.0.0.1:3000/api/students/update-student-data/${trackName}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              'studentId': Number(studentId),
+              'field': fieldName,
+              'newValue': newValue
+            })
+          }).then(res => {
+            if (res.status === 200) {
+              updateTableData(table);
+            } else {
+              alert('Failed to update cell!');
+            }
+          });
+        }
+
+        function updateTableData(table) {
+          const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+          rows.forEach(row => {
+            const degrees = Number(row.children[2].textContent.trim());
+            const additional = Number(row.children[3].textContent.trim());
+            const basicTotal = Number(row.children[4].textContent.trim());
+            const totalDegrees = degrees + additional;
+
+            // Update TotalDegrees cell
+            row.children[5].textContent = totalDegrees;
+
+            // Change color based on condition
+            if (degrees < basicTotal * 0.85 && degrees < basicTotal * 0.75) {
+              row.children[0].style.backgroundColor = "red";
+              row.children[0].style.color = "white";
+            } else if (degrees < basicTotal * 0.85 && degrees >= basicTotal * 0.75) {
+              row.children[0].style.backgroundColor = "rgb(209, 192, 67)";
+              row.children[0].style.color = "white";
+            } else {
+              row.children[0].style.backgroundColor = "green";
+              row.children[0].style.color = "white";
+            }
+          });
+
+          // Sort rows by TotalDegrees in descending order
+          rows.sort((a, b) => {
+            const totalA = Number(a.children[5].textContent.trim());
+            const totalB = Number(b.children[5].textContent.trim());
+            return totalB - totalA;
+          });
+
+          const tbody = table.querySelector("tbody");
+          tbody.innerHTML = ""; // Clear existing rows
+          rows.forEach((row, index) => {
+            row.children[7].textContent = index + 1; // Update ranking
+            tbody.appendChild(row); // Append sorted row
+          });
+        }
       </script>
 </body>
 </html>
