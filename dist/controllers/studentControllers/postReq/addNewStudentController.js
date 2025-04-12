@@ -82,7 +82,7 @@ const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             res.status(500).json({ message: "Failed to add student" });
             return;
         }
-        res.status(201).json({ message: "Student added successfully", track: updatedTrack });
+        res.status(201).json({ message: "Student added successfully", track: updatedTrack, studentId: studentId });
     }
     catch (error) {
         console.error(error);

@@ -85,7 +85,7 @@ export const addNewStudent = async (req: Request, res: Response): Promise<void> 
             return;
         }
 
-        res.status(201).json({ message: "Student added successfully", track: updatedTrack });
+        res.status(201).json({ message: "Student added successfully", track: updatedTrack,  studentId: studentId });
 
     } catch (error) {
         console.error(error);
