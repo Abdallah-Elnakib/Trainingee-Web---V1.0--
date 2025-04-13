@@ -1,3 +1,4 @@
+
 const themes = [
     {
         background: "#1A1A2E",
@@ -68,7 +69,12 @@ resetPasswordForm.addEventListener('click', async (event) => {
         body: JSON.stringify({ newPassword, confirmPassword }),
     });
     const data = await response.json();
-    alert(data.message);
+    Swal.fire({
+        icon: data.status,
+        title: data.message,
+        showConfirmButton: true,
+        timer: 2000,
+    });
     if (data.message === "Password reset successfully") {
         window.location.href = "http://127.0.0.1:3000/api/auth/login";
     }

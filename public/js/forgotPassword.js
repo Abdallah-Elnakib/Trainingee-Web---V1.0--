@@ -64,9 +64,25 @@ resetPasswordForm.addEventListener('click', async (event) => {
 
     });
     const data = await response.json();
-    alert(data.message);
     if (data.message === "Reset password email sent successfully") {
+        await Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: data.message,
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+        });
         window.location.href = "http://127.0.0.1:3000/api/auth/login";
+    }
+    else {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.message,
+            showConfirmButton: true,
+            timer: 2000,
+        });
     }
 });
 
