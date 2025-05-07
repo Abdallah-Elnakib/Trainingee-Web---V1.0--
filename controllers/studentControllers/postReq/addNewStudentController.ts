@@ -52,7 +52,7 @@ export const addNewStudent = async (req: Request, res: Response): Promise<void> 
             Name: studentName || "Unknown",
             Degrees: 0,
             Additional: 0,
-            BasicTotal: 0,
+            BasicTotal: [],
             TotalDegrees: 0,
             Comments: "No comments"
         };
