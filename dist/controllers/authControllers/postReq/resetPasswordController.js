@@ -43,7 +43,7 @@ const resetPasswordInDatabase = (req, res) => __awaiter(void 0, void 0, void 0, 
                 return;
             }
         });
-        const hashedPassword = yield bcryptjs_1.default.hash(newPassword, 10);
+        const hashedPassword = yield bcryptjs_1.default.hash(newPassword + process.env.SOLT, 10);
         yield userModel_1.Users.updateOne({ _id: user._id }, { $set: { password: hashedPassword, resetPasswordToken: null } });
         res.status(200).json({ message: 'Password reset successfully' });
     }

@@ -20,12 +20,12 @@ const transporter = nodemailer_1.default.createTransport({
         pass: process.env.EMAIL_PASS,
     },
 });
-const mailSender = (to, subject, html) => __awaiter(void 0, void 0, void 0, function* () {
+const mailSender = (options) => __awaiter(void 0, void 0, void 0, function* () {
     const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
-        subject,
-        html,
+        from: options.from || process.env.EMAIL_USER,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
     };
     try {
         const info = yield transporter.sendMail(mailOptions);

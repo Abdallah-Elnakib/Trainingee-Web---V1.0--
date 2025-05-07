@@ -33,7 +33,7 @@ export const resetPasswordInDatabase = async (req: Request, res: Response) => {
             }
         });
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(newPassword+process.env.SOLT, 10);
 
         await Users.updateOne({ _id: user._id }, { $set: { password: hashedPassword, resetPasswordToken: null } });
 

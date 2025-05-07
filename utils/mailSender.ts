@@ -8,12 +8,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const mailSender = async (to: string, subject: string, html: string) => {
+interface MailOptions {
+  from?: string;
+  to: string;
+  subject: string;
+  html: string;
+}
+
+const mailSender = async (options: MailOptions) => {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to,
-    subject,
-    html,
+    from: options.from || process.env.EMAIL_USER,
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
   };
 
   try {

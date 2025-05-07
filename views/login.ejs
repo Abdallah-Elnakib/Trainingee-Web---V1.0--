@@ -3,30 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">      
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/css/login.css">  
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Trainingee - Login</title>
 </head>
 <body>
-    <section class="container">
-        <div class="login-container">
-            <div class="circle circle-one"></div>
-            <div class="form-container">
-                <img src="https://raw.githubusercontent.com/hicodersofficial/glassmorphism-login-form/master/assets/illustration.png" alt="illustration" class="illustration" />
-                <h1 class="opacity">LOGIN</h1>
-                <form>
-                    <input type="text" placeholder="Email" id="username"/>
-                    <input type="password" placeholder="PASSWORD" id="password" />
-                    <button class="opacity" id="submit">SUBMIT</button>
-                </form>
-                <div class="register-forget opacity">
-                    <a href="http://127.0.0.1:3000/api/auth/forgot-Password">FORGOT PASSWORD</a>
+    <div class="login-container">
+        <div class="form-container">
+            <div class="form-title">Welcome Back</div>
+            <form>
+                <div class="input-group">
+                    <input type="text" placeholder="Email or Username" id="username" required />
                 </div>
+                <div class="input-group password-container">
+                    <input type="password" placeholder="Password" id="password" required />
+                    <button type="button" id="togglePassword" class="toggle-password">
+                        <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <button type="button" class="submit-btn" id="submit">Sign In</button>
+            </form>
+            <div class="back-link">
+                <a href="/api/auth/forgot-Password">Forgot Password?</a>
             </div>
-            <div class="circle circle-two"></div>
         </div>
-        <div class="theme-btn-container"></div>
-    </section>
+        <div class="image-container">
+            <div class="image-overlay">
+                <div class="brand-name">Trainingee</div>
+                <div class="brand-tagline">Student Management System</div>
+            </div>
+        </div>
+    </div>
     <script src="/js/login.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
