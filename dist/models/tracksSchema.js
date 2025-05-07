@@ -18,8 +18,10 @@ exports.addStudentSchema = zod_1.z.object({
     Additional: zod_1.z.number().min(0, 'Additional Is Required'),
     BasicTotal: zod_1.z.array(zod_1.z.object({
         taskName: zod_1.z.string().min(1, 'Task Name Is Required'),
-        taskDegree: zod_1.z.number().min(0, 'Task Degree Is Required')
+        taskDegree: zod_1.z.number().min(0, 'Task Degree Is Required'),
+        studentTaskDegree: zod_1.z.number().min(0, 'Student Task Degree Is Required'),
     })),
     TotalDegrees: zod_1.z.number().min(0, 'Total Degrees Is Required'),
     Comments: zod_1.z.string().min(1, 'Comments Is Required'),
+    studentStatus: zod_1.z.string().min(1, 'Student Status Is Required'),
 }).strict();

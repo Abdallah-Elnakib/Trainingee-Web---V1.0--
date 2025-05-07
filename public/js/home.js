@@ -24,26 +24,90 @@ logout.addEventListener("click", function () {
 const getTracks = document.getElementsByClassName("flex xl:flex-row flex-col items-center font-medium text-gray-900 dark:text-white pb-2 mb-2 xl:border-b border-gray-200 border-opacity-75 dark:border-gray-700 w-full");
 for (const track of getTracks) {
   track.addEventListener("click", function () {
-    for (const changeDisplay of getTracks) {
-      document.getElementById(changeDisplay.innerText).style.display = 'none';
+    // Hide all table containers
+    const tableContainers = document.querySelectorAll('.table-container');
+    tableContainers.forEach(container => {
+      container.style.display = 'none';
+    });
+    
+    // Show the selected track's table container
+    const trackName = track.innerText;
+    const tableContainer = document.getElementById(`container-${trackName}`);
+    if (tableContainer) {
+      tableContainer.style.display = 'block';
     }
-    document.getElementById(track.innerText).style.display = 'block';
-    document.getElementsByClassName('flex items-center text-3xl text-gray-900 dark:text-white')[0].innerText = track.innerText;
+    
+    // Update the header text
+    document.getElementsByClassName('flex items-center text-3xl text-gray-900 dark:text-white')[0].innerText = trackName;
   })
 }
+// Search functionality for student tables
+function setupStudentSearch() {
+  const searchInputs = document.querySelectorAll('.student-search-input');
+  
+  searchInputs.forEach(searchInput => {
+    // Get the table within the same container
+    const tableContainer = searchInput.closest('.table-container');
+    const table = tableContainer ? tableContainer.querySelector('table') : null;
+    
+    if (!table) return;
+    
+    // Add event listener for real-time search
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const rows = table.querySelectorAll('tbody tr');
+      
+      // Filter table rows
+      rows.forEach(row => {
+        const nameCell = row.querySelector('td:nth-child(2)');
+        const idCell = row.querySelector('td:nth-child(1)');
+        
+        if (!nameCell || !idCell) return;
+        
+        const name = nameCell.textContent.toLowerCase();
+        const id = idCell.textContent.toLowerCase();
+        
+        // Show/hide row based on whether name or ID contains the search term
+        if (name.includes(searchTerm) || id.includes(searchTerm)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+    
+    // Add event listener for Escape key to clear search
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+      }
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  setupStudentSearch();
+  setupStudentStatusHandlers();
   const tableCells = document.querySelectorAll("td");
 
   tableCells.forEach(cell => {
     cell.addEventListener("dblclick", () => {
       const columnIndex = Array.from(cell.parentNode.children).indexOf(cell);
-      const editableFields = [1, 2, 3, 6, 4];
+      const editableFields = [1, 3, 6]; 
+      
+      if (columnIndex === 2) {
+        showTaskGradesEditor(cell);
+        return;
+      }
+      
       if (columnIndex === 8) return;
+      
       if (!editableFields.includes(columnIndex)) {
         Swal.fire({
           icon: 'info',
           title: 'Not Editable',
-          text: 'You can only edit the Name, Degrees, Additional, or Comments fields.',
+          text: 'You can only edit the Name, Additional, or Comments fields directly.',
         });
         return;
       }
@@ -74,6 +138,320 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   });
+});
+
+function showTaskGradesEditor(cell) {
+  const row = cell.closest("tr");
+  const table = cell.closest("table");
+  const trackName = table.id;
+  const studentId = Number(row.children[0].textContent.trim());
+  
+  // Fetch student data to get the tasks
+  fetch(`http://127.0.0.1:3000/api/students/get-student-tasks/${trackName}/${studentId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (!data || !data.student || !Array.isArray(data.student.BasicTotal)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Could not retrieve task data!',
+      });
+      return;
+    }
+    
+    const tasks = data.student.BasicTotal;
+    let totalTaskGrades = 0;
+    
+    // Create HTML for task list with improved styling
+    let taskListHTML = `
+      <div class="task-list-container">
+        <table class="task-grades-table w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="text-left p-3 border-b-2 border-gray-300 font-semibold">Task</th>
+              <th class="text-right p-3 border-b-2 border-gray-300 font-semibold">Score</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    tasks.forEach((task, index) => {
+      totalTaskGrades += task.studentTaskDegree || 0;
+      taskListHTML += `
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="p-3 border-b border-gray-200">
+            <div class="flex flex-col">
+              <span class="font-medium">${task.taskName}</span>
+              <span class="text-xs text-gray-500">${task.studentTaskDegree || 0}/${task.taskDegree}</span>
+            </div>
+          </td>
+          <td class="p-3 border-b border-gray-200 text-right">
+            <div class="relative w-full flex justify-end">
+              <input type="number" 
+                    id="task-grade-${index}" 
+                    class="task-grade-input w-20 text-right p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" 
+                    value="${task.studentTaskDegree || 0}" 
+                    data-original="${task.studentTaskDegree || 0}" 
+                    data-max="${task.taskDegree}" 
+                    data-index="${index}" 
+                    data-task-name="${task.taskName}">
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+    
+    taskListHTML += `
+          </tbody>
+          <tfoot>
+            <tr class="bg-gray-100">
+              <td class="p-3 border-t-2 border-gray-300 font-bold">Total Score</td>
+              <td class="p-3 border-t-2 border-gray-300 text-right font-bold" id="task-total">${totalTaskGrades}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    `;
+    
+    // Show the task list in a professionally styled modal
+    Swal.fire({
+      title: '<span class="text-xl font-semibold">Student Task Scores</span>',
+      html: taskListHTML,
+      width: '550px',
+      showCancelButton: true,
+      confirmButtonText: 'Save Changes',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      customClass: {
+        container: 'task-grades-modal',
+        popup: 'rounded-lg shadow-lg',
+        header: 'border-b pb-3',
+        content: 'pt-4',
+        confirmButton: 'px-4 py-2 rounded-md',
+        cancelButton: 'px-4 py-2 rounded-md'
+      },
+      didOpen: () => {
+        // Add event listeners to update total when grades change
+        const inputs = document.querySelectorAll('.task-grade-input');
+        inputs.forEach(input => {
+          input.addEventListener('input', updateTaskTotal);
+        });
+      },
+      preConfirm: () => {
+        // Collect all task grades
+        const updatedTasks = [];
+        const inputs = document.querySelectorAll('.task-grade-input');
+        let hasChanges = false;
+        
+        inputs.forEach(input => {
+          const index = parseInt(input.getAttribute('data-index'));
+          const taskName = input.getAttribute('data-task-name');
+          const maxGrade = parseInt(input.getAttribute('data-max'));
+          const newGrade = parseInt(input.value) || 0;
+          const originalGrade = parseInt(input.getAttribute('data-original'));
+          
+          // Validate that the grade doesn't exceed the maximum
+          const validatedGrade = Math.min(newGrade, maxGrade);
+          
+          if (validatedGrade !== originalGrade) {
+            hasChanges = true;
+          }
+          
+          updatedTasks.push({
+            index: index,
+            taskName: taskName,
+            studentTaskDegree: validatedGrade
+          });
+        });
+        
+        if (!hasChanges) {
+          return { noChanges: true };
+        }
+        
+        return { tasks: updatedTasks };
+      }
+    }).then((result) => {
+      if (result.isConfirmed && !result.value.noChanges) {
+        // Save changes to database
+        fetch(`http://127.0.0.1:3000/api/students/update-student-tasks/${trackName}/${studentId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            tasks: result.value.tasks
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          throw new Error('Failed to update tasks');
+        })
+        .then(data => {
+          // Update the Degrees cell with the new total student task grades
+          cell.textContent = data.degrees || 0;
+          
+          // Update the TotalDegrees cell (degrees + additional)
+          const additional = Number(row.children[3].textContent.trim());
+          row.children[5].textContent = (data.degrees || 0) + additional;
+          
+          // Update table data (colors, ranking, etc.)
+          updateTableData(table);
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Task grades updated successfully!',
+            timer: 1500
+          });
+        })
+        .catch(error => {
+          console.error('Error updating task grades:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Update Failed',
+            text: 'Failed to update task grades!',
+          });
+        });
+      }
+    });
+  })
+  .catch(error => {
+    console.error('Error fetching student tasks:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Failed to retrieve student tasks!',
+    });
+  });
+}
+
+// Function to update task total in the modal
+function updateTaskTotal() {
+  const inputs = document.querySelectorAll('.task-grade-input');
+  let total = 0;
+  
+  inputs.forEach(input => {
+    const maxGrade = parseInt(input.getAttribute('data-max'));
+    const inputValue = parseInt(input.value) || 0;
+    const validValue = Math.min(inputValue, maxGrade);
+    total += validValue;
+    
+    if (validValue !== inputValue) {
+      input.value = validValue;
+    }
+  });
+  
+  document.getElementById('task-total').textContent = total;
+}
+
+function setupStudentStatusHandlers() {
+    // Add change event listeners to all status selects
+  document.addEventListener('change', function(event) {
+    if (event.target.classList.contains('status-select')) {
+      const select = event.target;
+      const cell = select.closest('.student-status-cell');
+      
+      if (!cell) return;
+      
+      // Get the data attributes and ensure proper formatting
+      const studentId = select.getAttribute('data-student-id');
+      const trackName = cell.getAttribute('data-track-name');
+      const newStatus = select.value;
+      const currentStatus = select.getAttribute('data-current-status');
+      
+      // Log the data we're sending to help with debugging
+      console.log('Updating student status with data:', {
+        studentId: studentId,
+        trackName: trackName,
+        newStatus: newStatus,
+        currentStatus: currentStatus
+      });
+      
+      // Don't do anything if selecting the same status
+      if (newStatus === currentStatus) return;
+      
+      // Define status colors for styling the select
+      const statusColors = {
+        'Pending': 'border-yellow-400',
+        'Accepted': 'border-green-400',
+        'Rejected': 'border-red-400',
+        'In Progress': 'border-blue-400'
+      };
+      
+      // Update select border color immediately
+      Object.values(statusColors).forEach(cls => select.classList.remove(cls));
+      select.classList.add(statusColors[newStatus]);
+      
+      // Disable the select and add visual feedback during the update
+      select.disabled = true;
+      select.classList.add('opacity-50');
+      
+      // Update the status via API - use the correct endpoint path
+      fetch(`http://127.0.0.1:3000/api/students/update-student-status/${trackName}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          studentId: studentId,
+          newStatus: newStatus
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Status update failed with status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Update the data-current-status attribute
+        select.setAttribute('data-current-status', newStatus);
+        
+        // Show success message
+        Swal.fire({
+          icon: 'success',
+          title: 'Status Updated',
+          text: `Student status changed to ${newStatus}`,
+          timer: 1500,
+          showConfirmButton: false
+        });
+      })
+      .catch(error => {
+        console.error('Error updating student status:', error);
+        
+        // Revert the select back to the original value
+        select.value = currentStatus;
+        
+        // Revert border color to match original status
+        Object.values(statusColors).forEach(cls => select.classList.remove(cls));
+        select.classList.add(statusColors[currentStatus]);
+        
+        // Show error message
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: 'Failed to update student status. Please try again.'
+        });
+      })
+      .finally(() => {
+        // Re-enable the select
+        select.disabled = false;
+        select.classList.remove('opacity-50');
+      });
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  setupStudentStatusHandlers();
 });
 
 function updateCell(cell, newValue) {
@@ -117,7 +495,6 @@ function updateCell(cell, newValue) {
 function updateTableData(table) {
   const rowsCheck = Array.from(table.querySelectorAll("tbody tr"));
 
-  // Remove rows with the placeholder message "No students in this track"
   rowsCheck.forEach(row => {
     const firstCell = row.querySelector("td");
     if (firstCell && firstCell.textContent.trim() === "No students in this track.") {
@@ -229,8 +606,10 @@ for (const deleteButton of deleteButtons) {
 
 const addStudentButton = document.getElementById("addStudent");
 addStudentButton.addEventListener("click", function () {
-  // Get the currently visible table
-  const table = document.querySelector("table[style='display: block;']");
+  // Get the currently visible table container
+  const visibleContainer = document.querySelector(".table-container[style*='display: block']");
+  const table = visibleContainer ? visibleContainer.querySelector("table") : null;
+  
   if (!table) {
     Swal.fire({
       icon: 'error',
@@ -374,7 +753,10 @@ addStudentButton.addEventListener("click", function () {
 
 const addTaskButton = document.getElementById("addTask");
 addTaskButton.addEventListener("click", function () {
-  const table = document.querySelector("table[style='display: block;']");
+  // Get the currently visible table container
+  const visibleContainer = document.querySelector(".table-container[style*='display: block']");
+  const table = visibleContainer ? visibleContainer.querySelector("table") : null;
+  
   if (!table) {
     Swal.fire({
       icon: 'error',
@@ -438,6 +820,16 @@ addTaskButton.addEventListener("click", function () {
       })
         .then(response => {
           if (response.ok) {
+            const newTaskGrade = result.value.taskGrade;
+          const tbody = table.querySelector('tbody');
+          tbody.querySelectorAll('tr').forEach(row => {
+            if (!row.textContent.includes('No students')) {
+              const basicTotalCell = row.children[4]; 
+              const currentTotal = parseInt(basicTotalCell.textContent) || 0;
+              basicTotalCell.textContent = currentTotal + newTaskGrade;
+            }
+          });
+          updateTableData(table);
             Swal.fire({
               icon: 'success',
               title: 'Task Added!',

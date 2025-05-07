@@ -56,7 +56,8 @@ const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             Additional: 0,
             BasicTotal: [],
             TotalDegrees: 0,
-            Comments: "No comments"
+            Comments: "No comments",
+            studentStatus: "Pending"
         };
         const parsedStudentData = tracksSchema_1.addStudentSchema.safeParse({
             Id: Student.ID,
@@ -65,7 +66,8 @@ const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             Additional: Student.Additional,
             BasicTotal: Student.BasicTotal,
             TotalDegrees: Student.TotalDegrees,
-            Comments: Student.Comments
+            Comments: Student.Comments,
+            studentStatus: "Pending"
         });
         if (!parsedStudentData.success) {
             res.status(400).json({ message: "Invalid student data", errors: parsedStudentData.error.errors[0] });

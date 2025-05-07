@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -279,53 +279,68 @@
                                                     class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden student-status-cell"
                                                     data-student-id="<%= students.ID %>"
                                                     data-track-name="<%= track.trackName %>">
-                                                    <div class="student-status-container">
-                                                      <% const currentStatus=students.studentStatus || 'Pending' ; const
-                                                        statusColors={ 'Pending' : 'border-yellow-400' , 'Accepted'
-                                                        : 'border-green-400' , 'Rejected' : 'border-red-400'
-                                                        , 'In Progress' : 'border-blue-400' }; const
-                                                        borderClass=statusColors[currentStatus]; %>
-
-                                                        <!-- Single status dropdown with colored border -->
-                                                        <select
-                                                          class="status-select w-full px-3 py-2 text-sm rounded border-2 <%= borderClass %> bg-white focus:outline-none cursor-pointer font-medium"
-                                                          data-student-id="<%= students.ID %>"
-                                                          data-current-status="<%= currentStatus %>">
-                                                          <option value="Pending" <%=currentStatus==='Pending'
-                                                            ? 'selected' : '' %>>Pending</option>
-                                                          <option value="Accepted" <%=currentStatus==='Accepted'
-                                                            ? 'selected' : '' %>>Accepted</option>
-                                                          <option value="Rejected" <%=currentStatus==='Rejected'
-                                                            ? 'selected' : '' %>>Rejected</option>
-                                                          <option value="In Progress" <%=currentStatus==='In Progress'
-                                                            ? 'selected' : '' %>>In Progress</option>
-                                                        </select>
-                                                    </div>
+                                                     <div class="status-switch-container w-full">
+                                                       <div
+                                                         class="status-switch relative w-full h-8 rounded-full overflow-hidden border border-gray-300 shadow-inner bg-gray-100"
+                                                         data-original-value="<%= students.studentStatus || 'Pending' %>">
+                                                        <div class="status-track flex w-full h-full">
+                                                           <div class="status-segment bg-yellow-100 flex-1"></div>
+                                                           <div class="status-segment bg-green-100 flex-1"></div>
+                                                           <div class="status-segment bg-red-100 flex-1"></div>
+                                                           <div class="status-segment bg-blue-100 flex-1"></div>
+                                                        </div>
+                                                        <% 
+                                                           let positionPercent=0; 
+                                                           if (students.studentStatus==='Accepted') { 
+                                                             positionPercent=25; 
+                                                           } else if (students.studentStatus==='Rejected') { 
+                                                             positionPercent=50; 
+                                                           } else if (students.studentStatus==='In Progress') { 
+                                                             positionPercent=75; 
+                                                           } else { 
+                                                             positionPercent=0; // Default to 0 for 'Pending' or any other status 
+                                                           } 
+                                                         %>
+                                                         <div class="status-handle absolute top-0 h-full w-1/4 bg-white rounded-full shadow-md flex items-center justify-center transition-all duration-300 ease-in-out" style="left: <%= positionPercent %>%">
+                                                           <span class="text-xs font-semibold status-label"><%= students.studentStatus || 'Pending' %></span>
+                                                         </div>
+                                                         <input type="hidden" class="current-status" value="<%= students.studentStatus || 'Pending' %>">
+                                                         <div class="status-click-areas absolute top-0 left-0 w-full h-full flex">
+                                                           <div class="status-click-area flex-1 cursor-pointer z-10" data-status="Pending"></div>
+                                                           <div class="status-click-area flex-1 cursor-pointer z-10" data-status="Accepted"></div>
+                                                           <div class="status-click-area flex-1 cursor-pointer z-10" data-status="Rejected"></div>
+                                                           <div class="status-click-area flex-1 cursor-pointer z-10" data-status="In Progress"></div>
+                                                         </div>
+                                                        </div>
+                                                       </div>
+                                                     </div>
+                                                  </td>
+                                                  <td
+                                                    class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden">
+                                                    <%= Ranking %>
+                                                  </td>
+                                                  <td
+                                                    class="m:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden delete">
+                                                    <img src="/Photo/delete4.png" alt="delete" srcset="">
+                                                  </td>
+                            </tr>
+                            <% } %>
+                              <% } else { %>
+                                <tr>
+                                  <td colspan="9"
+                                    class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 text-center">
+                                    No students in this track.
+                                  </td>
+                                </tr>
+                                <% } %>
+                  </tbody>
+                </table>
               </div>
-              </td>
-              <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden">
-                <%= Ranking %>
-              </td>
-              <td class="m:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden delete">
-                <img src="/Photo/delete4.png" alt="delete" srcset="">
-              </td>
-              </tr>
               <% } %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="9" class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 text-center">
-                      No students in this track.
-                    </td>
-                  </tr>
-                  <% } %>
-                    </tbody>
-                    </table>
           </div>
-          <% } %>
         </div>
       </div>
     </div>
-  </div>
   </div>
   <script src="/js/home.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -54,7 +54,8 @@ export const addNewStudent = async (req: Request, res: Response): Promise<void> 
             Additional: 0,
             BasicTotal: [],
             TotalDegrees: 0,
-            Comments: "No comments"
+            Comments: "No comments",
+            studentStatus : "Pending"
         };
 
         const parsedStudentData = addStudentSchema.safeParse({
@@ -64,7 +65,8 @@ export const addNewStudent = async (req: Request, res: Response): Promise<void> 
             Additional: Student.Additional,
             BasicTotal: Student.BasicTotal,
             TotalDegrees: Student.TotalDegrees,
-            Comments: Student.Comments
+            Comments: Student.Comments,
+            studentStatus : "In Progress"
         });
 
         if (!parsedStudentData.success) {

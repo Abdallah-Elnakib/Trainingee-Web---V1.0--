@@ -9,23 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateTrack = void 0;
+exports.getStudentTasks = void 0;
 const tracksSchema_1 = require("../../../models/tracksSchema");
-const updateTrack = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getStudentTasks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const trackName = req.params.trackName;
-        const taskName = req.body.taskName;
-        const taskGrade = req.body.taskGrade;
+        const { trackName, studentId } = req.params;
         if (!trackName) {
             res.status(400).json({ message: "Track name is required" });
             return;
         }
-        if (!taskName) {
-            res.status(400).json({ message: "Task name is required" });
-            return;
-        }
-        if (taskGrade === undefined || taskGrade === null) {
-            res.status(400).json({ message: "Task grade is required" });
+        if (!studentId || isNaN(Number(studentId))) {
+            res.status(400).json({ message: "Valid student ID is required" });
             return;
         }
         const track = yield tracksSchema_1.Track.findOne({ trackName });
@@ -37,24 +31,19 @@ const updateTrack = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             res.status(500).json({ message: "Invalid track data structure" });
             return;
         }
-        for (const student of track.trackData) {
-            if (!Array.isArray(student.BasicTotal)) {
-                student.BasicTotal = [];
-            }
-            student.BasicTotal.push({
-                taskName: taskName,
-                taskDegree: taskGrade,
-                studentTaskDegree: 0
-            });
+        // Find the student in the track data
+        const student = track.trackData.find(s => s.ID === Number(studentId));
+        if (!student) {
+            res.status(404).json({ message: "Student not found in this track" });
+            return;
         }
-        track.markModified('trackData');
-        yield track.save();
-        res.status(200).json({ message: "Task added successfully" });
-        return;
+        // Return the student data with their tasks
+        res.status(200).json({
+            student: student
+        });
     }
     catch (error) {
-        res.status(500).json({ message: "Server error while updating track" });
-        return;
+        res.status(500).json({ message: "Server error while retrieving student tasks" });
     }
 });
-exports.updateTrack = updateTrack;
+exports.getStudentTasks = getStudentTasks;
