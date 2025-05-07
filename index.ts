@@ -8,7 +8,8 @@ import session from 'express-session';
 import auth from './router/authRouter';
 import tracks from './router/TracksRouter'
 import students from './router/studentsRouter'
-import path from 'path';
+
+
 
 export const app: Express = express();
 
@@ -41,3 +42,5 @@ mongoose.connection.once('open', async () => {
 mongoose.connection.on('error', (error) => {
     console.error('Database connection failed:', error);
 });
+
+

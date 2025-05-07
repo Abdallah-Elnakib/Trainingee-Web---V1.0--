@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Users } from '../../../models/userModel';
 
+
 declare module 'express-session' {
   interface SessionData {
     refreshToken: string;
@@ -41,7 +42,7 @@ export const signup = async (req: Request, res: Response): Promise<void>  => {
             return;
         }
 
-        const hashPassword = await bcrypt.hash(password, 10);
+        const hashPassword = await bcrypt.hash(password + process.env.SOLT, 10);
 
         const user = new Users({
             firstName,

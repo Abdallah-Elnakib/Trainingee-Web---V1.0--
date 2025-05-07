@@ -10,6 +10,11 @@ export const addNewTrack = async (req: Request, res: Response): Promise<void> =>
             res.status(400).json({ message: 'Track Name is required' });
             return;
         }
+        const existingTrack = await Track.findOne({ trackName });
+        if (existingTrack) {
+            res.status(409).json({ message: 'Track already exists' });
+            return;
+        }
 
         // Create a new track instance
         const newTrack = new Track({

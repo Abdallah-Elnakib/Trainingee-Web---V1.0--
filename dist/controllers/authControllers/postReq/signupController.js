@@ -43,7 +43,7 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             });
             return;
         }
-        const hashPassword = yield bcryptjs_1.default.hash(password, 10);
+        const hashPassword = yield bcryptjs_1.default.hash(password + process.env.SOLT, 10);
         const user = new userModel_2.Users({
             firstName,
             lastName,

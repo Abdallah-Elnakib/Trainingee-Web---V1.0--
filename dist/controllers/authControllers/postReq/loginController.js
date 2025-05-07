@@ -28,7 +28,8 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             res.status(404).json({ message: 'User not found' });
             return;
         }
-        const isPasswordValid = yield bcryptjs_1.default.compare(password, user.password);
+        const userPassword = password + process.env.SOLT;
+        const isPasswordValid = yield bcryptjs_1.default.compare(userPassword, user.password);
         if (!isPasswordValid) {
             res.status(401).json({ message: 'Invalid password' });
             return;

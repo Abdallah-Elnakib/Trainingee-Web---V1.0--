@@ -19,6 +19,11 @@ const addNewTrack = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             res.status(400).json({ message: 'Track Name is required' });
             return;
         }
+        const existingTrack = yield tracksSchema_1.Track.findOne({ trackName });
+        if (existingTrack) {
+            res.status(409).json({ message: 'Track already exists' });
+            return;
+        }
         // Create a new track instance
         const newTrack = new tracksSchema_1.Track({
             trackName,
