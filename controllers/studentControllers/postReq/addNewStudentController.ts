@@ -47,15 +47,21 @@ export const addNewStudent = async (req: Request, res: Response): Promise<void> 
 
         const studentId = existingStudentId || (await Track.aggregate([{ $unwind: "$trackData" }, { $group: { _id: null, maxId: { $max: "$trackData.ID" } } }]).then(result => (result[0]?.maxId || 0) + 1));
 
+        const getTasks = await Track.findOne({ trackName });
+        const tasks = getTasks?.trackData[0].BasicTotal;
+        for (const task of tasks) {
+            task.studentTaskDegree = 0;
+        }
+
         const Student = {
             ID: studentId,
             Name: studentName || "Unknown",
             Degrees: 0,
             Additional: 0,
-            BasicTotal: [],
+            BasicTotal: tasks,
             TotalDegrees: 0,
             Comments: "No comments",
-            studentStatus : "Pending"
+            studentStatus : "In Progress"
         };
 
         const parsedStudentData = addStudentSchema.safeParse({

@@ -49,15 +49,20 @@ const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             }
         }
         const studentId = existingStudentId || (yield tracksSchema_2.Track.aggregate([{ $unwind: "$trackData" }, { $group: { _id: null, maxId: { $max: "$trackData.ID" } } }]).then(result => { var _a; return (((_a = result[0]) === null || _a === void 0 ? void 0 : _a.maxId) || 0) + 1; }));
+        const getTasks = yield tracksSchema_2.Track.findOne({ trackName });
+        const tasks = getTasks === null || getTasks === void 0 ? void 0 : getTasks.trackData[0].BasicTotal;
+        for (const task of tasks) {
+            task.studentTaskDegree = 0;
+        }
         const Student = {
             ID: studentId,
             Name: studentName || "Unknown",
             Degrees: 0,
             Additional: 0,
-            BasicTotal: [],
+            BasicTotal: tasks,
             TotalDegrees: 0,
             Comments: "No comments",
-            studentStatus: "Pending"
+            studentStatus: "In Progress"
         };
         const parsedStudentData = tracksSchema_1.addStudentSchema.safeParse({
             Id: Student.ID,
@@ -67,7 +72,7 @@ const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             BasicTotal: Student.BasicTotal,
             TotalDegrees: Student.TotalDegrees,
             Comments: Student.Comments,
-            studentStatus: "Pending"
+            studentStatus: "In Progress"
         });
         if (!parsedStudentData.success) {
             res.status(400).json({ message: "Invalid student data", errors: parsedStudentData.error.errors[0] });

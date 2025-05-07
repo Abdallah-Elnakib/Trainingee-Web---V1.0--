@@ -37,6 +37,10 @@ for (const track of getTracks) {
       tableContainer.style.display = 'block';
     }
     
+    // حفظ المسار المحدد في التخزين المحلي
+    console.log('User clicked on track:', trackName);
+    localStorage.setItem('lastActiveTrack', trackName);
+    
     // Update the header text
     document.getElementsByClassName('flex items-center text-3xl text-gray-900 dark:text-white')[0].innerText = trackName;
   })
@@ -86,15 +90,16 @@ function setupStudentSearch() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  setupStudentSearch();
-  setupStudentStatusHandlers();
-  const tableCells = document.querySelectorAll("td");
-
-  tableCells.forEach(cell => {
+// Function to add event listeners to cells for editing
+function setupCellEditors(cells) {
+  cells.forEach(cell => {
+    // Skip cells that already have event listeners
+    if (cell.hasAttribute('data-has-events')) return;
+    
+    cell.setAttribute('data-has-events', 'true');
     cell.addEventListener("dblclick", () => {
       const columnIndex = Array.from(cell.parentNode.children).indexOf(cell);
-      const editableFields = [1, 3, 6]; 
+      const editableFields = [1, 2, 3, 6]; // Added 2 (Degrees) to editable fields
       
       if (columnIndex === 2) {
         showTaskGradesEditor(cell);
@@ -107,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
         Swal.fire({
           icon: 'info',
           title: 'Not Editable',
-          text: 'You can only edit the Name, Additional, or Comments fields directly.',
+          text: 'You can only edit the Name, Degrees, Additional, or Comments fields directly.',
         });
         return;
       }
@@ -138,6 +143,15 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  setupStudentSearch();
+  setupStudentStatusHandlers();
+  
+  // Setup cell editors for existing cells
+  const tableCells = document.querySelectorAll("td");
+  setupCellEditors(tableCells);
 });
 
 function showTaskGradesEditor(cell) {
@@ -145,6 +159,18 @@ function showTaskGradesEditor(cell) {
   const table = cell.closest("table");
   const trackName = table.id;
   const studentId = Number(row.children[0].textContent.trim());
+  
+  console.log('Opening task window for student:', studentId, 'in track:', trackName);
+  
+  // Show loading indicator
+  Swal.fire({
+    title: 'Loading tasks...',
+    text: 'Please wait while we fetch the task data',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
   
   // Fetch student data to get the tasks
   fetch(`http://127.0.0.1:3000/api/students/get-student-tasks/${trackName}/${studentId}`, {
@@ -353,7 +379,7 @@ function updateTaskTotal() {
 }
 
 function setupStudentStatusHandlers() {
-    // Add change event listeners to all status selects
+  // Add change event listeners to all status selects
   document.addEventListener('change', function(event) {
     if (event.target.classList.contains('status-select')) {
       const select = event.target;
@@ -450,8 +476,121 @@ function setupStudentStatusHandlers() {
   });
 }
 
+// Function to setup student status display for a specific table or all tables
+function setupStudentStatusDisplay(targetTable = null) {
+  const tables = targetTable ? [targetTable] : document.querySelectorAll('table');
+  
+  tables.forEach(table => {
+    const trackName = table.id;
+    if (!trackName) return;
+    
+    const rows = table.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+      const studentId = row.querySelector('td:first-child')?.textContent.trim();
+      if (!studentId || studentId === 'Auto') return;
+      
+      // Check if status cell exists, if not, create it
+      let statusCell = row.querySelector('.student-status-cell');
+      if (!statusCell) {
+        const lastCell = row.querySelector('td:last-child');
+        if (!lastCell) return;
+        
+        // Add status column if it doesn't exist
+        statusCell = document.createElement('td');
+        statusCell.className = 'student-status-cell sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800';
+        statusCell.setAttribute('data-track-name', trackName);
+        
+        // Add the new cell to the row
+        row.insertBefore(statusCell, row.lastChild);
+        
+        // Fetch the current status
+        fetch(`http://127.0.0.1:3000/api/students/get-student/${trackName}/${studentId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data && data.student) {
+              const status = data.student.studentStatus || 'Pending';
+              
+              // Create the status dropdown
+              const statusColors = {
+                'Pending': 'border-yellow-400',
+                'Accepted': 'border-green-400',
+                'Rejected': 'border-red-400',
+                'In Progress': 'border-blue-400'
+              };
+              
+              const selectEl = document.createElement('select');
+              selectEl.className = `status-select form-select w-full border-2 ${statusColors[status]} p-1 rounded`;
+              selectEl.setAttribute('data-student-id', studentId);
+              selectEl.setAttribute('data-current-status', status);
+              
+              // Add options
+              ['Pending', 'Accepted', 'Rejected', 'In Progress'].forEach(optionValue => {
+                const option = document.createElement('option');
+                option.value = optionValue;
+                option.textContent = optionValue;
+                if (optionValue === status) option.selected = true;
+                selectEl.appendChild(option);
+              });
+              
+              statusCell.appendChild(selectEl);
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching student status:', error);
+            statusCell.textContent = 'Error loading status';
+          });
+      }
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('Document loaded, initializing all components');
+  
+  // Initialize all components
   setupStudentStatusHandlers();
+  
+  // Setup status displays and interactive elements for all tables
+  const allTables = document.querySelectorAll('table');
+  allTables.forEach(table => {
+    if (!table.id) return;
+    console.log('Initializing table:', table.id);
+    setupInteractiveElements(table);
+  });
+  
+  // Add click handlers to degree cells for task window
+  document.querySelectorAll('td:nth-child(3)').forEach(cell => {
+    if (!cell.hasAttribute('data-has-task-event')) {
+      cell.setAttribute('data-has-task-event', 'true');
+      cell.style.cursor = 'pointer';
+      cell.addEventListener('click', () => {
+        showTaskGradesEditor(cell);
+      });
+    }
+  });
+  
+  // إصلاح نهائي لآلية تخزين وفتح المسار الأخير
+  setTimeout(() => {
+    const lastActiveTrack = localStorage.getItem('lastActiveTrack');
+    if (lastActiveTrack) {
+      console.log('Opening last active track:', lastActiveTrack);
+      // البحث عن أزرار المسار باستخدام الطريقة الصحيحة
+      const trackButtons = document.getElementsByClassName("flex xl:flex-row flex-col items-center font-medium text-gray-900 dark:text-white pb-2 mb-2 xl:border-b border-gray-200 border-opacity-75 dark:border-gray-700 w-full");
+      
+      console.log('Found track buttons:', trackButtons.length);
+      for (let i = 0; i < trackButtons.length; i++) {
+        const buttonText = trackButtons[i].innerText.trim();
+        console.log(`Button ${i} text:`, buttonText);
+        
+        if (buttonText === lastActiveTrack.trim()) {
+          console.log('Found matching track button, clicking it');
+          trackButtons[i].click();
+          break;
+        }
+      }
+    }
+  }, 500);
 });
 
 function updateCell(cell, newValue) {
@@ -459,88 +598,312 @@ function updateCell(cell, newValue) {
   const table = cell.closest("table");
   const trackName = table.id;
   const studentId = row.children[0].textContent.trim();
-  const columnIndex = Array.from(cell.parentNode.children).indexOf(cell);
-  const fieldMap = ["ID", "Name", "Degrees", "Additional", "BasicTotal", "TotalDegrees", "Comments", "Ranking"];
-  const fieldName = fieldMap[columnIndex];
-
-  if (fieldName === 'Degrees' || fieldName === "Additional" || fieldName === "BasicTotal") {
-    newValue = Number(newValue);
+  
+  if (!studentId || studentId === "Auto") {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Student must be saved first before editing!',
+    });
+    return;
   }
-
-  console.log(`Table ID: ${trackName}, Student ID: ${studentId}, Field: ${fieldName}, New Value: ${newValue}`);
-
-  fetch(`http://127.0.0.1:3000/api/students/update-student-data/${trackName}`, {
+  
+  const columnIndex = Array.from(row.children).indexOf(cell);
+  
+  let fieldToUpdate;
+  let valueToUpdate;
+  
+  switch (columnIndex) {
+    case 1: // Name column
+      fieldToUpdate = "studentName";
+      valueToUpdate = newValue;
+      break;
+    case 2: // Degrees column
+      fieldToUpdate = "studentDegrees";
+      valueToUpdate = Number(newValue);
+      break;
+    case 3: // Additional column
+      fieldToUpdate = "studentAdditional";
+      valueToUpdate = Number(newValue);
+      break;
+    case 6: // Comments column
+      fieldToUpdate = "studentComments";
+      valueToUpdate = newValue;
+      break;
+    default:
+      console.error("Trying to update a non-editable column");
+      return;
+  }
+  
+  // Show updating message
+  const loadingToast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 1000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer)
+      toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+  });
+  
+  loadingToast.fire({
+    icon: 'info',
+    title: 'Updating data...'
+  });
+  
+  fetch(`http://127.0.0.1:3000/api/students/update-student/${trackName}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      'studentId': Number(studentId),
-      'field': fieldName,
-      'newValue': newValue
+      studentId: Number(studentId),
+      [fieldToUpdate]: valueToUpdate
     })
   }).then(res => {
     if (res.status === 200) {
-      updateTableData(table);
+      // Use the comprehensive refresh for ALL updates
+      refreshUI(table);
+      
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Updated',
+        text: 'Student data updated successfully',
+        timer: 1500,
+        showConfirmButton: false
+      });
     } else {
       Swal.fire({
         icon: 'error',
         title: 'Update Failed',
-        text: 'Failed to update cell!',
+        text: 'Failed to update student data!',
       });
+    }
+  }).catch(error => {
+    console.error("Error updating student:", error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'An error occurred while updating student data.',
+    });
+  });
+}
+
+// Function to refresh and update all UI components
+function refreshUI(table) {
+  if (!table) {
+    console.error("No table provided to refreshUI");
+    return;
+  }
+  
+  console.log('Refreshing UI for table:', table.id);
+  
+  // Save current student status values before updating
+  const statusValues = saveStudentStatusValues(table);
+  
+  updateTableData(table);
+  
+  setupInteractiveElements(table);
+  
+  restoreStudentStatusValues(table, statusValues);
+}
+
+function saveStudentStatusValues(table) {
+  const statusValues = [];
+  
+  // Find all status selects in the table
+  const statusSelects = table.querySelectorAll('.status-select');
+  
+  statusSelects.forEach(select => {
+    statusValues.push({
+      studentId: select.getAttribute('data-student-id'),
+      status: select.value,
+      currentStatus: select.getAttribute('data-current-status')
+    });
+  });
+  
+  console.log('Saved status values:', statusValues);
+  return statusValues;
+}
+
+function restoreStudentStatusValues(table, statusValues) {
+  if (!statusValues || statusValues.length === 0) return;
+  
+  console.log('Attempting to restore statuses:', statusValues);
+  
+  const statusSelects = table.querySelectorAll('.status-select');
+  console.log('Found status selects:', statusSelects.length);
+  
+  statusSelects.forEach(select => {
+    const studentId = select.getAttribute('data-student-id');
+    console.log('Processing select for student ID:', studentId);
+    
+    // Find matching saved status
+    const savedStatus = statusValues.find(s => s.studentId === studentId);
+    
+    if (savedStatus) {
+      console.log('Found saved status for ID', studentId, ':', savedStatus);
+      select.value = savedStatus.status;
+      select.setAttribute('data-current-status', savedStatus.currentStatus);
+      
+      const statusColors = {
+        'Pending': 'border-yellow-400',
+        'Accepted': 'border-green-400',
+        'Rejected': 'border-red-400',
+        'In Progress': 'border-blue-400'
+      };
+      
+      // Remove all status color classes
+      Object.values(statusColors).forEach(cls => select.classList.remove(cls));
+      
+      // Add the appropriate color class
+      select.classList.add(statusColors[savedStatus.status]);
+    } else {
+      console.log('No saved status found for student ID:', studentId);
     }
   });
 }
 
-function updateTableData(table) {
-  const rowsCheck = Array.from(table.querySelectorAll("tbody tr"));
+function setupInteractiveElements(table) {
+  if (!table) return;
+  
+  console.log('Setting up interactive elements for:', table.id);
+  
+  const cells = table.querySelectorAll('td');
+  
+  setupCellEditors(cells);
+  
+  attachTaskWindowHandlers(table);
+  
+  setupStudentStatusDisplay(table);
+}
 
-  rowsCheck.forEach(row => {
-    const firstCell = row.querySelector("td");
-    if (firstCell && firstCell.textContent.trim() === "No students in this track.") {
-      row.remove();
+// Updated function that solves the status dropdown problem permanently
+function updateTableData(table) {
+  if (!table) {
+    console.error("No table provided to updateTableData");
+    return;
+  }
+  
+  console.log('Updating table data for:', table.id);
+  
+  // ===== RADICAL NEW APPROACH: CLONE & PRESERVE STATUS DROPDOWNS =====
+  
+  // STEP 1: Capture all status dropdown information for restoration
+  const statusCells = table.querySelectorAll('.student-status-cell');
+  const statusInfo = [];
+  
+  statusCells.forEach(cell => {
+    const select = cell.querySelector('.status-select');
+    if (select) {
+      const studentId = select.getAttribute('data-student-id');
+      const cellHTML = cell.innerHTML; // Save the entire HTML content
+      
+      statusInfo.push({
+        studentId,
+        cellHTML
+      });
     }
   });
-
+  
+  console.log('Captured status info for', statusInfo.length, 'students');
+  
+  // STEP 2: Update all the non-status data
   const rows = Array.from(table.querySelectorAll("tbody tr"));
+  
   rows.forEach(row => {
-    const degrees = Number(row.children[2].textContent.trim());
-    const additional = Number(row.children[3].textContent.trim());
-    const basicTotal = Number(row.children[4].textContent.trim());
+    if (row.children.length < 6) return;
+    
+    const degrees = Number(row.children[2]?.textContent.trim() || 0);
+    const additional = Number(row.children[3]?.textContent.trim() || 0);
+    const basicTotal = Number(row.children[4]?.textContent.trim() || 0);
     const totalDegrees = degrees + additional;
 
-    // Update TotalDegrees cell
-    row.children[5].textContent = totalDegrees;
-
-    // Change color based on condition
-    if (degrees < basicTotal * 0.85 && degrees < basicTotal * 0.75) {
-      row.children[0].style.backgroundColor = "red";
-      row.children[0].style.color = "white";
-    } else if (degrees < basicTotal * 0.85 && degrees >= basicTotal * 0.75) {
-      row.children[0].style.backgroundColor = "rgb(209, 192, 67)";
-      row.children[0].style.color = "white";
-    } else {
-      row.children[0].style.backgroundColor = "green";
-      row.children[0].style.color = "white";
+    if (row.children[5]) {
+      row.children[5].textContent = totalDegrees;
     }
+    
+    if (row.children[0]) {
+      if (degrees < basicTotal * 0.85 && degrees < basicTotal * 0.75) {
+        row.children[0].style.backgroundColor = "red";
+        row.children[0].style.color = "white";
+      } else if (degrees < basicTotal * 0.85 && degrees >= basicTotal * 0.75) {
+        row.children[0].style.backgroundColor = "rgb(209, 192, 67)";
+        row.children[0].style.color = "white";
+      } else if (basicTotal > 0) { // Only color green if there is a valid basicTotal
+        row.children[0].style.backgroundColor = "green";
+        row.children[0].style.color = "white";
+      } else {
+        // For new students with no basicTotal yet, use a neutral color
+        row.children[0].style.backgroundColor = "#6c757d";
+        row.children[0].style.color = "white";
+      }
+    }
+    
+    // Store the total degrees as a data attribute for sorting
+    row.setAttribute('data-total-degrees', totalDegrees);
   });
 
-  // Sort rows by TotalDegrees in descending order
+  // STEP 3: Sort rows by total degrees (completely standard approach)
   rows.sort((a, b) => {
     const totalA = Number(a.children[5]?.textContent.trim() || 0);
     const totalB = Number(b.children[5]?.textContent.trim() || 0);
     return totalB - totalA;
   });
-
+  
+  // STEP 4: Rebuild the table with the sorted rows
   const tbody = table.querySelector("tbody");
-  tbody.innerHTML = ""; // Clear existing rows
+  if (!tbody) return;
+  
+  // Remove all rows
+  tbody.innerHTML = '';
+  
+  // Add back the sorted rows and update rankings
   rows.forEach((row, index) => {
-    // Ensure the row has enough cells before updating the ranking
+    // Update ranking number (index + 1)
     if (row.children.length >= 8) {
-      row.children[7].textContent = index + 1; // Update ranking
+      row.children[7].textContent = index + 1;
     }
-    tbody.appendChild(row); // Append sorted row
+    
+    tbody.appendChild(row);
   });
+  
+  // STEP 5: RESTORE STATUS DROPDOWNS DIRECTLY, NO SERVER CALLS
+  const trackName = table.id;
+  const updatedRows = tbody.querySelectorAll('tr');
+  
+  // For each row in the updated table
+  updatedRows.forEach(row => {
+    const studentId = row.querySelector('td:first-child')?.textContent.trim();
+    if (!studentId || studentId === 'Auto') return;
+    
+    // Find matching saved status
+    const savedStatus = statusInfo.find(s => s.studentId === studentId);
+    if (savedStatus) {
+      // Find or create the status cell
+      let statusCell = row.querySelector('.student-status-cell');
+      if (!statusCell) {
+        statusCell = document.createElement('td');
+        statusCell.className = 'student-status-cell sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800';
+        statusCell.setAttribute('data-track-name', trackName);
+        row.insertBefore(statusCell, row.lastChild);
+      }
+      
+      // Restore the saved HTML directly
+      statusCell.innerHTML = savedStatus.cellHTML;
+      console.log('Restored status for student:', studentId);
+    }
+  });
+  
+  // Reattach event handlers for the status dropdowns
+  setupStudentStatusHandlers();
+  
+  console.log('Table updated and status dropdowns restored without page reload');
+
+
 }
 
 // Delete student button
@@ -602,6 +965,38 @@ for (const deleteButton of deleteButtons) {
   });
 }
 
+// Function to attach task window click handlers to table cells
+function attachTaskWindowHandlers(table) {
+  if (!table) return;
+  
+  console.log('Attaching task window handlers for table:', table.id);
+  
+  // Find the grades cells (column index 2)
+  const rows = table.querySelectorAll('tbody tr');
+  rows.forEach(row => {
+    const gradeCell = row.querySelector('td:nth-child(3)');
+    if (!gradeCell) return;
+    
+    // Remove previous event listeners by cloning the element
+    const newGradeCell = gradeCell.cloneNode(true);
+    if (gradeCell.parentNode) {
+      gradeCell.parentNode.replaceChild(newGradeCell, gradeCell);
+    }
+    
+    // Add visual indicator that this cell is clickable
+    newGradeCell.style.cursor = 'pointer';
+    newGradeCell.classList.add('task-clickable');
+    
+    // Mark this cell as having the event listener
+    newGradeCell.setAttribute('data-has-task-event', 'true');
+    
+    // Add click event for task window (using single click instead of double)
+    newGradeCell.addEventListener('click', () => {
+      showTaskGradesEditor(newGradeCell);
+    });
+  });
+}
+
 // Add New addStudent
 
 const addStudentButton = document.getElementById("addStudent");
@@ -619,6 +1014,25 @@ addStudentButton.addEventListener("click", function () {
     return;
   }
 
+  // 1. Get Basic Total from existing students to match
+  const existingRows = table.querySelectorAll("tbody tr");
+  let basicTotalValue = 250; // Default value if no students exist
+  
+  if (existingRows.length > 0) {
+    for (let i = 0; i < existingRows.length; i++) {
+      const row = existingRows[i];
+      if (row.children.length >= 5) {
+        const bt = Number(row.children[4]?.textContent.trim() || 0);
+        if (bt > 0) {
+          basicTotalValue = bt;
+          break;
+        }
+      }
+    }
+  }
+  
+  console.log('Using Basic Total value for new student:', basicTotalValue);
+  
   const tbody = table.querySelector("tbody");
   const newRow = document.createElement("tr");
 
@@ -626,6 +1040,8 @@ addStudentButton.addEventListener("click", function () {
   const idCell = document.createElement("td");
   idCell.textContent = "Auto"; // Placeholder for auto-generated ID
   idCell.className = "sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800";
+  idCell.style.backgroundColor = "red"; // Default color for new student
+  idCell.style.color = "white";
 
   const nameCell = document.createElement("td");
   const nameInput = document.createElement("input");
@@ -637,14 +1053,15 @@ addStudentButton.addEventListener("click", function () {
 
   const degreesCell = document.createElement("td");
   degreesCell.textContent = 0; // Default value
-  degreesCell.className = "sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800";
+  degreesCell.className = "sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 task-clickable";
+  degreesCell.style.cursor = "pointer";
 
   const additionalCell = document.createElement("td");
   additionalCell.textContent = 0; // Default value
   additionalCell.className = "sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800";
 
   const basicTotalCell = document.createElement("td");
-  basicTotalCell.textContent = 0; // Default value
+  basicTotalCell.textContent = basicTotalValue; // Use the same Basic Total as other students
   basicTotalCell.className = "sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800";
 
   const totalDegreesCell = document.createElement("td");
@@ -654,6 +1071,27 @@ addStudentButton.addEventListener("click", function () {
   const commentsCell = document.createElement("td");
   commentsCell.textContent = "No comments"; // Default value
   commentsCell.className = "sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800";
+  
+  // Create status cell (before ranking)
+  const statusCell = document.createElement("td");
+  statusCell.className = "student-status-cell sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800";
+  statusCell.setAttribute('data-track-name', table.id);
+  
+  // Create status select with default 'Pending'
+  const statusSelect = document.createElement("select");
+  statusSelect.className = "status-select form-select w-full border-2 border-yellow-400 p-1 rounded";
+  statusSelect.setAttribute('data-current-status', 'Pending');
+  
+  // Status options
+  ['Pending', 'Accepted', 'Rejected', 'In Progress'].forEach(status => {
+    const option = document.createElement("option");
+    option.value = status;
+    option.textContent = status;
+    if (status === 'Pending') option.selected = true;
+    statusSelect.appendChild(option);
+  });
+  
+  statusCell.appendChild(statusSelect);
 
   const rankingCell = document.createElement("td");
   rankingCell.textContent = "-"; // Placeholder for ranking
@@ -665,9 +1103,9 @@ addStudentButton.addEventListener("click", function () {
   deleteButton.alt = "Delete";
   deleteButton.className = "delete";
   deleteCell.appendChild(deleteButton);
-  deleteCell.className = "m:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800";
+  deleteCell.className = "sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800";
 
-  // Append cells to the new row
+  // Append cells to the new row in correct order
   newRow.appendChild(idCell);
   newRow.appendChild(nameCell);
   newRow.appendChild(degreesCell);
@@ -675,6 +1113,7 @@ addStudentButton.addEventListener("click", function () {
   newRow.appendChild(basicTotalCell);
   newRow.appendChild(totalDegreesCell);
   newRow.appendChild(commentsCell);
+  newRow.appendChild(statusCell);   // Status comes before ranking
   newRow.appendChild(rankingCell);
   newRow.appendChild(deleteCell);
 
@@ -687,6 +1126,19 @@ addStudentButton.addEventListener("click", function () {
     if (confirmDelete) {
       newRow.remove();
     }
+  });
+
+  // Add event handler to the degrees cell for tasks
+  degreesCell.addEventListener("click", function() {
+    if (idCell.textContent === "Auto") {
+      Swal.fire({
+        title: 'Not Saved Yet',
+        text: 'Please save the student first by entering a name.',
+        icon: 'warning'
+      });
+      return;
+    }
+    showTaskGradesEditor(degreesCell);
   });
 
   // Add functionality to save the new student
@@ -702,45 +1154,74 @@ addStudentButton.addEventListener("click", function () {
     }
 
     const trackName = table.id; // Get the track name from the table ID
+    
+    // Show loading
+    Swal.fire({
+      title: 'Adding student...',
+      text: 'Please wait',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
     fetch(`http://127.0.0.1:3000/api/students/add-new-student`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         trackName: trackName,
-        studentName: studentName
-      })
-    }).then(res => {
-      if (res.status === 201) {
-        res.json().then(data => {
-          if (data) {
-            console.log(`Student added: ${data.studentId}, `, data);
-            idCell.textContent = data.studentId;
-
-            nameCell.innerHTML = `<div class="flex items-center">${studentName}</div>`;
-            nameCell.className = "sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800";
-
-            nameInput.disabled = true;
-            updateTableData(table);
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'Failed to add student!',
-            });
-          }
-        });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to add student!',
-        });
-      }
+        studentName: studentName,
+      }),
     })
+      .then((response) => {
+        console.log('API Response Status:', response.status);
+        return response.json();
+      })
+      .then((data) => {
+        console.log("New student added - Full Response:", data);
+        // تعديل في شرط التحقق من النجاح
+        if (data && data.message === "Student added successfully" && data.studentId) {
+          // Replace input with regular text
+          nameCell.textContent = studentName;
+          
+          // Update cells
+          idCell.textContent = data.studentId;
+          
+          // Update status select data attribute
+          const statusSelect = newRow.querySelector('.status-select');
+          if (statusSelect) {
+            statusSelect.setAttribute('data-student-id', data.studentId);
+          }
+          
+          // Close loading dialog
+          Swal.close();
+          
+          // Success message
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Student added successfully!',
+            timer: 1500,
+            showConfirmButton: false
+          }).then(() => {
+            console.log('Saving current track:', trackName);
+            localStorage.setItem('lastActiveTrack', trackName);
+            window.location.reload();
+          });
+        } else {
+          Swal.close();
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to add student!',
+          });
+        }
+      })
       .catch(error => {
         console.error("Error adding student:", error);
+        Swal.close();
         Swal.fire({
           icon: 'error',
           title: 'Error',
