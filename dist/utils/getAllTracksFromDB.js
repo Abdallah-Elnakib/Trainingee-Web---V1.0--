@@ -23,7 +23,12 @@ const getAllTracksFromDB = () => __awaiter(void 0, void 0, void 0, function* () 
             track.markModified('trackData');
             yield track.save();
             data.push({
+                _id: track._id,
                 trackName: track.trackName,
+                trackStartDate: track.trackStartDate,
+                trackEndDate: track.trackEndDate,
+                trackStatus: track.trackStatus,
+                trackAssignedTo: track.trackAssignedTo,
                 studentNum: track.trackData.length,
                 trackData: track.trackData,
             });

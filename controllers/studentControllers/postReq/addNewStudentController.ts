@@ -47,10 +47,24 @@ export const addNewStudent = async (req: Request, res: Response): Promise<void> 
 
         const studentId = existingStudentId || (await Track.aggregate([{ $unwind: "$trackData" }, { $group: { _id: null, maxId: { $max: "$trackData.ID" } } }]).then(result => (result[0]?.maxId || 0) + 1));
 
-        const getTasks = await Track.findOne({ trackName });
-        const tasks = getTasks?.trackData[0].BasicTotal;
-        for (const task of tasks) {
-            task.studentTaskDegree = 0;
+        // Get tasks from the track or create default empty tasks array if none exist
+        const trackData = await Track.findOne({ trackName });
+        
+        // Initialize tasks array
+        let tasks = [];
+        
+        // Check if track has data and if first student has BasicTotal
+        if (trackData && trackData.trackData && trackData.trackData.length > 0 && trackData.trackData[0].BasicTotal) {
+            tasks = JSON.parse(JSON.stringify(trackData.trackData[0].BasicTotal)); // Deep copy to avoid reference issues
+            
+            // Reset all student task degrees to 0
+            for (const task of tasks) {
+                task.studentTaskDegree = 0;
+            }
+        } else {
+            // If no existing tasks found, create a default empty task
+            console.log('No BasicTotal found for this track, creating default empty tasks array');
+            tasks = [];
         }
 
         const Student = {

@@ -5,81 +5,81 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://assets.codepen.io/344846/style.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="/css/sidebar-fixes.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-  <title>Home</title>
+  </style>
+  <title>Trainingee - Student Management System</title>
 </head>
 
 <body>
   <div class="bg-gray-100 dark:bg-gray-900 dark:text-white text-gray-600 h-screen flex overflow-hidden text-sm">
     <div
       class="bg-white dark:bg-gray-900 dark:border-gray-800 w-20 flex-shrink-0 border-r border-gray-200 flex-col hidden sm:flex">
-      <div class="h-16 text-blue-500 flex items-center justify-center">
-        <div class="flex flex-col items-center justify-center">
-          <svg class="w-9" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
-          </svg>
-          <div class="text-blue-500 text-xs font-bold mt-1">Trainingee</div>
+      <!-- Logo Section with stronger separation -->
+      <div class="logo-section pt-6 pb-8 mb-8 text-blue-500 flex flex-col items-center justify-center border-b border-gray-200" style="min-height: 120px;">
+        <div class="relative mb-2">
+          <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg opacity-75 blur"></div>
+          <div class="relative">
+            <svg class="w-9 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+            </svg>
+          </div>
         </div>
+        <div class="app-title text-xs font-bold">Trainingee</div>
       </div>
-      <div class="flex mx-auto flex-grow mt-4 flex-col text-gray-400 space-y-4">
-        <button
-          class="h-10 w-12 dark:bg-gray-700 dark:text-white rounded-md flex items-center justify-center bg-blue-100 text-blue-500">
-          <svg viewBox="0 0 24 24" class="h-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-          </svg>
-        </button>
-        <button class="h-10 w-12 dark:text-gray-500 rounded-md flex items-center justify-center">
-          <svg viewBox="0 0 24 24" class="h-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-          </svg>
-        </button>
-        <button class="h-10 w-12 dark:text-gray-500 rounded-md flex items-center justify-center">
-          <svg viewBox="0 0 24 24" class="h-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-        </button>
-        <button class="h-10 w-12 dark:text-gray-500 rounded-md flex items-center justify-center">
-          <svg viewBox="0 0 24 24" class="h-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"
-            stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </button>
+      
+      <!-- Navigation Section with clearer separation -->
+      <div class="nav-section px-2 flex flex-col items-center">
+        <a href="/" class="p-3 mb-3 rounded-xl bg-blue-50 text-blue-500 transition-all duration-200">
+          <i class="fas fa-home text-xl"></i>
+        </a>
+        <a href="/tracks" class="p-3 mb-3 rounded-xl hover:bg-blue-50 transition-all duration-200">
+          <i class="fas fa-layer-group text-gray-500 text-xl"></i>
+        </a>
+        <a href="/users" class="p-3 mb-3 rounded-xl hover:bg-blue-50 transition-all duration-200">
+          <i class="fas fa-users text-gray-500 text-xl"></i>
+        </a>
+        <a href="/settings" class="p-3 mb-3 rounded-xl hover:bg-blue-50 transition-all duration-200">
+          <i class="fas fa-cog text-gray-500 text-xl"></i>
+        </a>
       </div>
     </div>
     <div class="flex-grow overflow-hidden h-full flex flex-col">
       <div class="h-16 lg:flex w-full border-b border-gr-200 dark:border-gray-800 hidden px-10">
         <div class="flex h-full text-gray-600 dark:text-gray-400">
+          <a href="/"
+            class="cursor-pointer h-full border-b-2 border-blue-500 text-blue-500 dark:text-white dark:border-white inline-flex mr-8 items-center font-medium tab-button active">
+            <i class="fas fa-home mr-2"></i> Dashboard
+          </a>
+          <a href="/tracks"
+            class="cursor-pointer h-full border-b-2 border-transparent inline-flex items-center mr-8 font-medium tab-button hover:text-blue-500 transition-all duration-300">
+            <i class="fas fa-layer-group mr-2"></i> Tracks
+          </a>
           <a href="#"
-            class="Tracks cursor-pointer h-full border-b-2 border-blue-500 text-blue-500 dark:text-white dark:border-white inline-flex mr-8 items-center">Tracks</a>
-          <a href="#"
-            class="cursor-pointer h-full border-b-2 border-transparent inline-flex items-center mr-8">Users</a>
+            class="cursor-pointer h-full border-b-2 border-transparent inline-flex items-center mr-8 font-medium tab-button hover:text-blue-500 transition-all duration-300">
+            <i class="fas fa-users mr-2"></i> Users
+          </a>
         </div>
         <div class="ml-auto flex items-center space-x-7">
-          <button class="h-8 px-3 rounded-md shadow text-white bg-blue-500" id="Logout">Logout</button>
-          <button class="flex items-center">
+          <button class="h-9 px-4 rounded-md shadow-md text-white bg-blue-500 hover:bg-blue-600 font-medium transition-all duration-300 flex items-center" id="Logout">
+            <i class="fas fa-sign-out-alt mr-2"></i> Logout
+          </button>
+          <button class="flex items-center bg-gray-50 hover:bg-gray-100 transition-all duration-300 px-3 py-2 rounded-full">
             <span class="relative flex-shrink-0">
               <span
                 class="absolute right-0 -mb-0.5 bottom-0 w-2 h-2 rounded-full bg-green-500 border border-white dark:border-gray-900"></span>
             </span>
-            <span class="ml-2">
+            <span class="ml-2 font-medium">
               <%=user.firstName %>
                 <%= user.lastName %>
             </span>
-            <svg viewBox="0 0 24 24" class="w-4 ml-1 flex-shrink-0" stroke="currentColor" stroke-width="2" fill="none"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+            <i class="fas fa-chevron-down w-4 ml-2 text-sm text-gray-500"></i>
           </button>
         </div>
       </div>
@@ -100,13 +100,21 @@
           </div>
           <div class="space-y-4 mt-3">
             <% for (let Track=0; Track < Tracks.length; Track++) { %>
-              <button class="bg-white p-3 w-full flex flex-col rounded-md dark:bg-gray-800 shadow">
+              <button class="bg-white p-4 w-full flex flex-col rounded-md dark:bg-gray-800 shadow-md hover:shadow-lg track-card transition-all duration-300">
                 <div
                   class="flex xl:flex-row flex-col items-center font-medium text-gray-900 dark:text-white pb-2 mb-2 xl:border-b border-gray-200 border-opacity-75 dark:border-gray-700 w-full">
-                  <%= Tracks[Track].trackName %>
+                  <i class="fas fa-graduation-cap text-blue-500 mr-2"></i>
+                  <span class="font-semibold"><%= Tracks[Track].trackName %></span>
                 </div>
                 <div class="flex items-center w-full">
-                  <div class="ml-auto text-xs text-gray-500">Number of students : <%= Tracks[Track].studentNum %>
+                  <div class="flex items-center">
+                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-xs font-medium flex items-center">
+                      <i class="fas fa-users mr-1"></i>
+                      <%= Tracks[Track].studentNum %> students
+                    </span>
+                  </div>
+                  <div class="ml-auto">
+                    <i class="fas fa-chevron-right text-gray-400"></i>
                   </div>
                 </div>
               </button>
@@ -116,100 +124,112 @@
         </div>
         <div class="flex-grow bg-white dark:bg-gray-900 overflow-y-auto">
           <div
-            class="sm:px-7 sm:pt-7 px-4 pt-4 flex flex-col w-full border-b border-gray-200 bg-white dark:bg-gray-900 dark:text-white dark:border-gray-800 sticky top-0">
+            class="sm:px-7 sm:pt-7 px-4 pt-4 flex flex-col w-full border-b border-gray-200 bg-white dark:bg-gray-900 dark:text-white dark:border-gray-800 sticky top-0 shadow-sm z-10">
             <div class="flex w-full items-center">
               <div class="flex items-center text-3xl text-gray-900 dark:text-white">
-                <span class="text-blue-500 font-bold mr-2">Trainingee</span> | <span class="ml-2">Tracks</span>
+                <span class="app-title font-bold mr-2 text-3xl">Trainingee</span> 
+                <span class="mx-2 text-gray-300">|</span> 
+                <span class="ml-2 font-medium">Tracks</span>
               </div>
               <div class="ml-auto sm:flex hidden items-center justify-end">
-                <div class="text-right">
-                  <div class="text-xs text-gray-400 dark:text-gray-400">Total Tracks</div>
-                  <div class="text-gray-900 text-lg dark:text-white">
+                <div class="text-right bg-blue-50 px-4 py-2 rounded-lg">
+                  <div class="text-xs text-blue-500 dark:text-gray-400 font-medium uppercase tracking-wider">Total Tracks</div>
+                  <div class="text-gray-900 text-xl dark:text-white font-bold">
                     <%= Tracks.length %>
                   </div>
                 </div>
                 <button
-                  class="w-8 h-8 ml-4 text-gray-400 shadow dark:text-gray-400 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700">
-                  <svg viewBox="0 0 24 24" class="w-4" stroke="currentColor" stroke-width="2" fill="none"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="1"></circle>
-                    <circle cx="19" cy="12" r="1"></circle>
-                    <circle cx="5" cy="12" r="1"></circle>
-                  </svg>
+                  class="w-10 h-10 ml-4 text-gray-500 hover:text-blue-500 shadow-md dark:text-gray-400 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 hover:border-blue-300 transition-all duration-200">
+                  <i class="fas fa-ellipsis-h"></i>
                 </button>
               </div>
             </div>
-            <div class="flex items-center space-x-3 sm:mt-7 mt-4">
+            <div class="flex items-center space-x-5 sm:mt-7 mt-4">
               <a href="#"
-                class="px-3 border-b-2 border-blue-500 text-blue-500 dark:text-white dark:border-white pb-1.5">All
-                Students</a>
-              <a href="#" class="px-3 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5"
-                id="addStudent">Add Students</a>
+                class="px-4 py-2 border-b-2 border-blue-500 text-blue-600 dark:text-white dark:border-white pb-1.5 font-medium tab-button active flex items-center">
+                <i class="fas fa-user-graduate mr-2"></i> All Students
+              </a>
+              <a href="#" class="px-4 py-2 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5 font-medium tab-button hover:text-blue-500 transition-all duration-300 flex items-center"
+                id="addStudent">
+                <i class="fas fa-user-plus mr-2"></i> Add Students
+              </a>
               <a href="#"
-                class="px-3 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5 sm:block hidden"
-                id="addTask">Add Task</a>
+                class="px-4 py-2 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5 sm:block hidden font-medium tab-button hover:text-blue-500 transition-all duration-300 flex items-center"
+                id="addTask">
+                <i class="fas fa-tasks mr-2"></i> Add Task
+              </a>
               <a href="#"
-                class="px-3 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5 sm:block hidden">Refresh</a>
+                class="px-4 py-2 border-b-2 border-transparent text-gray-600 dark:text-gray-400 pb-1.5 sm:block hidden font-medium tab-button hover:text-blue-500 transition-all duration-300 flex items-center">
+                <i class="fas fa-sync-alt mr-2"></i> Refresh
+              </a>
             </div>
           </div>
           <div class="sm:p-7 p-4">
             <div class="flex w-full items-center mb-7">
               <button
-                class="inline-flex mr-3 items-center h-8 pl-2.5 pr-2 rounded-md shadow text-gray-700 dark:text-gray-400 dark:border-gray-800 border border-gray-200 leading-none py-0">
-                <svg viewBox="0 0 24 24" class="w-4 mr-2 text-gray-400 dark:text-gray-600" stroke="currentColor"
-                  stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                Last 30 days
-                <svg viewBox="0 0 24 24" class="w-4 ml-1.5 text-gray-400 dark:text-gray-600" stroke="currentColor"
-                  stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
+                class="inline-flex mr-3 items-center h-9 px-4 rounded-md shadow-md text-gray-700 dark:text-gray-400 dark:border-gray-800 border border-gray-200 hover:border-blue-300 transition-all duration-200 bg-white">
+                <i class="far fa-calendar-alt mr-2 text-blue-500"></i>
+                <span class="font-medium">Last 30 days</span>
+                <i class="fas fa-chevron-down ml-2 text-gray-400"></i>
               </button>
               <button
-                class="inline-flex items-center h-8 pl-2.5 pr-2 rounded-md shadow text-gray-700 dark:text-gray-400 dark:border-gray-800 border border-gray-200 leading-none py-0">
-                Filter by
-                <svg viewBox="0 0 24 24" class="w-4 ml-1.5 text-gray-400 dark:text-gray-600" stroke="currentColor"
-                  stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
+                class="inline-flex items-center h-9 px-4 rounded-md shadow-md text-gray-700 dark:text-gray-400 dark:border-gray-800 border border-gray-200 hover:border-blue-300 transition-all duration-200 bg-white">
+                <i class="fas fa-filter mr-2 text-blue-500"></i>
+                <span class="font-medium">Filter by</span>
+                <i class="fas fa-chevron-down ml-2 text-gray-400"></i>
               </button>
-
+              <div class="ml-auto">
+                <button class="h-9 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-md shadow-md flex items-center font-medium transition-all duration-200">
+                  <i class="fas fa-sliders-h mr-2"></i> Advanced Filters
+                </button>
+              </div>
             </div>
             <% for (const track of Tracks) { %>
               <div class="table-container" style="display: none;" id="container-<%= track.trackName %>">
-                <div class="flex flex-col items-center mb-4 mt-2">
-                  <div class="text-sm text-gray-600 mb-2">
-                    <%= track.trackName %> - <%= track.trackData.length %> students
+                <div class="flex flex-col items-center mb-6 mt-6">
+                  <div class="text-xl font-semibold text-gray-800 mb-5 flex items-center">
+                    <i class="fas fa-graduation-cap text-blue-500 mr-3"></i>
+                    <%= track.trackName %> 
+                    <span class="ml-4 bg-blue-100 text-blue-700 text-sm py-1 px-3 rounded-full"><%= track.trackData.length %> students</span>
                   </div>
-                  <div class="search-container w-full max-w-md mx-auto" style="margin-bottom: 20px;">
+                  <div class="search-container w-full max-w-md mx-auto">
+                    <div class="search-icon-wrapper">
+                      <i class="fas fa-search text-gray-400"></i>
+                    </div>
                     <input type="text"
-                      class="student-search-input w-full h-10 px-4 py-2 text-base border border-gray-300 rounded-md bg-white shadow-sm"
+                      class="search-input student-search-input focus:ring-2 focus:ring-blue-300 focus:outline-none transition-all duration-200"
                       placeholder="Search by name or ID...">
                   </div>
                 </div>
-                <table class="w-full text-left" id="<%= track.trackName %>">
+                <table class="w-full text-left border-collapse" id="<%= track.trackName %>">
+                  <colgroup>
+                    <col style="width: 5%;"> <!-- ID -->
+                    <col style="width: 20%;"> <!-- Name -->
+                    <col style="width: 7%;"> <!-- Degrees -->
+                    <col style="width: 8%;"> <!-- Additional -->
+                    <col style="width: 8%;"> <!-- Basic Total -->
+                    <col style="width: 8%;"> <!-- Total Degrees -->
+                    <col style="width: 15%;"> <!-- Comments -->
+                    <col style="width: 15%;"> <!-- Status -->
+                    <col style="width: 7%;"> <!-- Ranking -->
+                    <col style="width: 7%;"> <!-- Delete -->
+                  </colgroup>
                   <thead>
-                    <tr class="text-gray-400">
-                      <th class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800">ID</th>
-                      <th class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800">Name</th>
-                      <th
-                        class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800 hidden md:table-cell">
+                    <tr class="bg-gray-50">
+                      <th class="px-4 py-3 border-b-2 border-gray-200 dark:border-gray-800 font-medium text-xs text-gray-500 uppercase tracking-wider text-center">ID</th>
+                      <th class="px-4 py-3 border-b-2 border-gray-200 dark:border-gray-800 font-medium text-xs text-gray-500 uppercase tracking-wider">Name</th>
+                      <th class="px-4 py-3 border-b-2 border-gray-200 dark:border-gray-800 font-medium text-xs text-gray-500 uppercase tracking-wider text-center">
                         Degrees</th>
-                      <th class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800">Additional
+                      <th class="px-4 py-3 border-b-2 border-gray-200 dark:border-gray-800 font-medium text-xs text-gray-500 uppercase tracking-wider text-center">Additional
                       </th>
-                      <th class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800">Basic Total
+                      <th class="px-4 py-3 border-b-2 border-gray-200 dark:border-gray-800 font-medium text-xs text-gray-500 uppercase tracking-wider text-center">Basic Total
                       </th>
-                      <th
-                        class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800 sm:text-gray-400 text-white">
+                      <th class="px-4 py-3 border-b-2 border-gray-200 dark:border-gray-800 font-medium text-xs text-gray-500 uppercase tracking-wider text-center">
                         Total Degrees</th>
-                      <th class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800">Comments</th>
-                      <th class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800">Status</th>
-                      <th class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800">Ranking</th>
-                      <th class="font-normal px-3 pt-0 pb-3 border-b border-gray-200 dark:border-gray-800">Delete</th>
+                      <th class="px-4 py-3 border-b-2 border-gray-200 dark:border-gray-800 font-medium text-xs text-gray-500 uppercase tracking-wider">Comments</th>
+                      <th class="px-4 py-3 border-b-2 border-gray-200 dark:border-gray-800 font-medium text-xs text-gray-500 uppercase tracking-wider text-center">Status</th>
+                      <th class="px-4 py-3 border-b-2 border-gray-200 dark:border-gray-800 font-medium text-xs text-gray-500 uppercase tracking-wider text-center">Ranking</th>
+                      <th class="px-4 py-3 border-b-2 border-gray-200 dark:border-gray-800 font-medium text-xs text-gray-500 uppercase tracking-wider text-center">Delete</th>
                     </tr>
                   </thead>
                   <tbody class="text-gray-600 dark:text-gray-100">
@@ -226,89 +246,105 @@
                                         <% } %>
                                           <% if (students.Degrees < totalTasks * 0.85 && students.Degrees>=
                                             totalTasks * 0.75) { %>
-                                            <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800"
+                                            <td class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800"
                                               style="background-color: rgb(209, 192, 67); color: white;">
-                                              <div class="flex items-center">
+                                              <div class="flex items-center justify-center font-medium text-lg">
                                                 <%= students.ID %>
                                               </div>
                                             </td>
                                             <% } else if (students.Degrees < totalTasks * 0.85 && students.Degrees <
                                               totalTasks * 0.75) { %>
-                                              <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800"
+                                              <td class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800"
                                                 style="background-color: red; color: white;">
-                                                <div class="flex items-center">
+                                                <div class="flex items-center justify-center font-medium text-lg">
                                                   <%= students.ID %>
                                                 </div>
                                               </td>
                                               <% } else { %>
                                                 <td
-                                                  class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800"
+                                                  class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800"
                                                   style="background-color: green; color: white;">
-                                                  <div class="flex items-center">
+                                                  <div class="flex items-center justify-center font-medium text-lg">
                                                     <%= students.ID %>
                                                   </div>
                                                 </td>
                                                 <% } %>
                                                   <td
-                                                    class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800">
+                                                    class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800">
                                                     <div class="flex items-center">
-                                                      <%= students.Name %>
+                                                      <span class="font-medium"><%= students.Name %></span>
                                                     </div>
                                                   </td>
                                                   <td
-                                                    class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden">
-                                                    <%= totalStudentTasks %>
+                                                    class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800 text-center">
+                                                    <span class="inline-flex justify-center items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
+                                                      <%= totalStudentTasks %>
+                                                    </span>
                                                   </td>
                                                   <td
-                                                    class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden">
-                                                    <%= students.Additional %>
+                                                    class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800 text-center">
+                                                    <span class="inline-flex justify-center items-center px-3 py-1 bg-green-50 text-green-700 rounded-full font-medium">
+                                                      <%= students.Additional %>
+                                                    </span>
                                                   </td>
 
-                                                  <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800
-                                            md:table-cell hidden">
-                                                    <%= totalTasks %>
+                                                  <td class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800 text-center">
+                                                    <span class="inline-flex justify-center items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-full font-medium">
+                                                      <%= totalTasks %>
+                                                    </span>
                                                   </td>
                                                   <td
-                                                    class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden">
-                                                    <%= students.TotalDegrees %>
+                                                    class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800 text-center">
+                                                    <span class="inline-flex justify-center items-center px-3 py-1 bg-purple-50 text-purple-700 rounded-full font-medium">
+                                                      <%= students.TotalDegrees %>
+                                                    </span>
                                                   </td>
                                                   <td
-                                                    class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden">
-                                                    <%= students.Comments %>
+                                                    class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800">
+                                                    <div class="text-gray-600 text-sm max-w-full overflow-hidden">
+                                                      <%= students.Comments || 'No comments' %>
+                                                    </div>
                                                   </td>
-                                                  <td
-                                                    class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden student-status-cell"
+                                                    <td
+                                                    class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800 student-status-cell"
                                                     data-student-id="<%= students.ID %>"
                                                     data-track-name="<%= track.trackName %>">
-                                                    <div class="student-status-container">
+                                                    <div class="student-status-container flex justify-center">
                                                       <% const currentStatus=students.studentStatus || 'Pending' ; const
                                                         statusColors={ 'Pending' : 'border-yellow-400' , 'Accepted'
                                                         : 'border-green-400' , 'Rejected' : 'border-red-400'
-                                                        , 'In Progress' : 'border-blue-400' }; const
-                                                        borderClass=statusColors[currentStatus]; %>
+                                                        , 'In Progress' : 'border-blue-400' }; 
+                                                        const statusBg={ 'Pending' : 'bg-yellow-50' , 'Accepted'
+                                                        : 'bg-green-50' , 'Rejected' : 'bg-red-50'
+                                                        , 'In Progress' : 'bg-blue-50' };
+                                                        const borderClass=statusColors[currentStatus]; 
+                                                        const bgClass=statusBg[currentStatus]; %>
 
-                                                        <!-- Single status dropdown with colored border -->
-                                                        <select
-                                                          class="status-select w-full px-3 py-2 text-sm rounded border-2 <%= borderClass %> bg-white focus:outline-none cursor-pointer font-medium"
-                                                          data-student-id="<%= students.ID %>"
-                                                          data-current-status="<%= currentStatus %>">
-                                                          <option value="Pending" <%=currentStatus==='Pending'
-                                                            ? 'selected' : '' %>>Pending</option>
-                                                          <option value="Accepted" <%=currentStatus==='Accepted'
-                                                            ? 'selected' : '' %>>Accepted</option>
-                                                          <option value="Rejected" <%=currentStatus==='Rejected'
-                                                            ? 'selected' : '' %>>Rejected</option>
-                                                          <option value="In Progress" <%=currentStatus==='In Progress'
-                                                            ? 'selected' : '' %>>In Progress</option>
-                                                        </select>
+                                                        <!-- Status dropdown with single arrow -->
+                                                        <div class="relative w-full max-w-[180px]">
+                                                          <select
+                                                            class="status-select w-full px-3 py-2 text-sm rounded-lg border-2 <%= borderClass %> <%= bgClass %> focus:outline-none cursor-pointer font-medium shadow-sm"
+                                                            data-student-id="<%= students.ID %>"
+                                                            data-current-status="<%= currentStatus %>">
+                                                            <option value="Pending" <%=currentStatus==='Pending'
+                                                              ? 'selected' : '' %>>Pending</option>
+                                                            <option value="Accepted" <%=currentStatus==='Accepted'
+                                                              ? 'selected' : '' %>>Accepted</option>
+                                                            <option value="Rejected" <%=currentStatus==='Rejected'
+                                                              ? 'selected' : '' %>>Rejected</option>
+                                                            <option value="In Progress" <%=currentStatus==='In Progress'
+                                                              ? 'selected' : '' %>>In Progress</option>
+                                                          </select>
+                                                        </div>
                                                     </div>
-              </div>
               </td>
-              <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden">
-                <%= Ranking %>
+              <td class="sm:p-3 py-3 px-4 border-b border-gray-200 dark:border-gray-800 text-center">
+                <div class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-indigo-100 text-indigo-800 font-semibold shadow-sm">
+                  <%= Ranking %>
+                </div>
               </td>
-              <td class="m:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden delete">
-                <img src="/Photo/delete4.png" alt="delete" srcset="">
+              <td class="sm:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden delete">
+                <img src="/Photo/delete4.png" alt="Delete" class="delete">
               </td>
               </tr>
               <% } %>

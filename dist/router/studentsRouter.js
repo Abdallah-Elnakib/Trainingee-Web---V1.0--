@@ -14,7 +14,9 @@ const updateStudentStatusController_1 = require("../controllers/studentsControll
 const router = express_1.default.Router();
 router.post('/add-new-student', addNewStudentController_1.addNewStudent);
 router.get('/get-all-students/:trackName', getAllStudentsFromTrackController_1.getAllStudentsFromTrack);
+// Support both old and new path formats for updating student data
 router.patch('/update-student-data/:trackName', updateDataFromStudentController_1.updateDataFromStudent);
+router.patch('/update-student/:trackName', updateDataFromStudentController_1.updateDataFromStudent);
 router.delete('/delete-student/:trackName', deleteStudentController_1.deleteStudent);
 // New endpoints for task management
 router.get('/get-student-tasks/:trackName/:studentId', getStudentTasksController_1.getStudentTasks);

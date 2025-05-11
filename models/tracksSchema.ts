@@ -3,6 +3,10 @@ import { z } from "zod";
 
 const trackSchema = new mongoose.Schema({
     trackName: { type: String, required: true },
+    trackStartDate : { type : Date, required : true },
+    trackEndDate : { type : Date, required : true },
+    trackStatus : { type : String, required : true },
+    trackAssignedTo : { type : String, required : true },
     trackData : {type : Array}
 });
 

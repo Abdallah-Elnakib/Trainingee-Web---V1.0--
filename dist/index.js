@@ -23,6 +23,9 @@ const express_session_1 = __importDefault(require("express-session"));
 const authRouter_1 = __importDefault(require("./router/authRouter"));
 const TracksRouter_1 = __importDefault(require("./router/TracksRouter"));
 const studentsRouter_1 = __importDefault(require("./router/studentsRouter"));
+const homeController_1 = require("./controllers/authControllers/getReq/homeController");
+const tracksController_1 = require("./controllers/tracksControllers/getReq/tracksController");
+const verifyJWT_1 = require("./middleware/verifyJWT");
 exports.app = (0, express_1.default)();
 (0, connDB_1.connDB)();
 exports.app.use(express_1.default.json());
@@ -34,9 +37,13 @@ exports.app.use((0, express_session_1.default)({
     cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 exports.app.use(express_1.default.static('public'));
+// API Routes
 exports.app.use('/api/auth', authRouter_1.default);
 exports.app.use('/api/tracks', TracksRouter_1.default);
 exports.app.use('/api/students', studentsRouter_1.default);
+// Page Routes
+exports.app.get('/', verifyJWT_1.verifyJWT, homeController_1.home);
+exports.app.get('/tracks', verifyJWT_1.verifyJWT, tracksController_1.tracksPage);
 mongoose_1.default.connection.once('open', () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('Database connected successfully...................');
     const port = process.env.PORT || 3000;

@@ -8,6 +8,9 @@ import session from 'express-session';
 import auth from './router/authRouter';
 import tracks from './router/TracksRouter'
 import students from './router/studentsRouter'
+import { home } from './controllers/authControllers/getReq/homeController';
+import { tracksPage } from './controllers/tracksControllers/getReq/tracksController';
+import { verifyJWT } from './middleware/verifyJWT';
 
 
 
@@ -26,9 +29,14 @@ app.use(session({
   
 app.use(express.static('public'));
 
+// API Routes
 app.use('/api/auth', auth);
 app.use('/api/tracks', tracks)
 app.use('/api/students', students)
+
+// Page Routes
+app.get('/', verifyJWT, home);
+app.get('/tracks', verifyJWT, tracksPage);
 
 mongoose.connection.once('open', async () => {
     console.log('Database connected successfully...................');

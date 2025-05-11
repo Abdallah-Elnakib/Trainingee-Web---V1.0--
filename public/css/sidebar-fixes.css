@@ -1,0 +1,52 @@
+/* إصلاحات الشريط الجانبي وأيقونة البحث */
+.logo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 0;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    min-height: 140px;
+}
+
+.nav-section {
+    margin-top: 2rem;
+    padding-top: 1rem;
+}
+
+.nav-section button {
+    margin: 1rem auto;
+}
+
+.search-container {
+    position: relative;
+    margin-bottom: 2rem;
+    margin-top: 1.5rem;
+}
+
+.search-icon-wrapper {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    padding-left: 1rem;
+    pointer-events: none;
+}
+
+.search-input {
+    padding-left: 3rem !important;
+    height: 3rem;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* إصلاح بسيط لعمود الحذف */
+.sm\:p-3.py-2.px-1.border-b.border-gray-200.dark\:border-gray-800.md\:table-cell.hidden.delete {
+    display: table-cell !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}

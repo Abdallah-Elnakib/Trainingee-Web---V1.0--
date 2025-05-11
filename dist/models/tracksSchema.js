@@ -8,6 +8,10 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const zod_1 = require("zod");
 const trackSchema = new mongoose_1.default.Schema({
     trackName: { type: String, required: true },
+    trackStartDate: { type: Date, required: true },
+    trackEndDate: { type: Date, required: true },
+    trackStatus: { type: String, required: true },
+    trackAssignedTo: { type: String, required: true },
     trackData: { type: Array }
 });
 exports.Track = mongoose_1.default.model('Tracks', trackSchema);

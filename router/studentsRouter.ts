@@ -11,7 +11,11 @@ const router: Router = express.Router();
 
 router.post('/add-new-student', addNewStudent);
 router.get('/get-all-students/:trackName', getAllStudentsFromTrack);
+
+// Support both old and new path formats for updating student data
 router.patch('/update-student-data/:trackName', updateDataFromStudent);
+router.patch('/update-student/:trackName', updateDataFromStudent);
+
 router.delete('/delete-student/:trackName', deleteStudent);
 
 // New endpoints for task management

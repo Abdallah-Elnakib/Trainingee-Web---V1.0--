@@ -902,106 +902,212 @@ function updateTableData(table) {
   setupStudentStatusHandlers();
   
   console.log('Table updated and status dropdowns restored without page reload');
-
-
 }
 
-// Delete student button
-const deleteButtons = document.getElementsByClassName("m:p-3 py-2 px-1 border-b border-gray-200 dark:border-gray-800 md:table-cell hidden delete");
-for (const deleteButton of deleteButtons) {
-  deleteButton.addEventListener("click", function () {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const row = deleteButton.closest("tr");
-        const table = deleteButton.closest("table");
-
-        const trackName = table.id;
-        const studentId = row.children[0].textContent.trim();
-
-        console.log(`Track Name: ${trackName}, Student ID: ${studentId}`);
-
-        fetch(`http://127.0.0.1:3000/api/students/delete-student/${trackName}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            'studentId': Number(studentId)
-          })
-        }).then(res => {
-          if (res.status === 200) {
-            row.remove();
-            Swal.fire(
-              'Deleted!',
-              'The student has been deleted.',
-              'success'
-            );
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Delete Failed',
-              text: 'Failed to delete student!',
-            });
-          }
-        }).catch(error => {
-          console.error("Error deleting student:", error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while deleting the student.',
-          });
-        });
-      }
-    });
+// Delete student function - completely rebuilt for better functionality
+function deleteStudent(event) {
+  // Get the button that was clicked
+  const button = event.target.closest('button');
+  // Get the row
+  const row = button.closest('tr');
+  // Get the student ID
+  const studentId = row.querySelector('td:first-child').textContent.trim();
+  // Get the table
+  const table = row.closest('table');
+  // Get the track name
+  const trackName = table.id;
+  
+  console.log('Deleting student with ID:', studentId, 'from track:', trackName);
+  
+  // Show confirmation dialog
+  Swal.fire({
+    title: 'هل أنت متأكد؟',
+    text: 'سيتم حذف هذا الطالب نهائياً!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'نعم، احذف!',
+    cancelButtonText: 'إلغاء'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Call the API to delete the student
+      fetch(`http://127.0.0.1:3000/api/students/delete-student/${trackName}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          'studentId': Number(studentId)
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to delete student');
+        }
+        return response.json();
+      })
+      .then(data => {
+        Swal.fire(
+          'تم الحذف!',
+          'تم حذف الطالب بنجاح.',
+          'success'
+        );
+        // Remove the row from the table
+        row.remove();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        Swal.fire(
+          'خطأ!',
+          'حدث خطأ أثناء حذف الطالب.',
+          'error'
+        );
+      });
+    }
   });
 }
 
-// Function to attach task window click handlers to table cells
+document.addEventListener("DOMContentLoaded", function() {
+  const deleteLinks = document.querySelectorAll(".delete-student");
+  console.log('وجدنا', deleteLinks.length, 'روابط حذف');
+  
+  deleteLinks.forEach(link => {
+    link.addEventListener("click", function(event) {
+      event.preventDefault();
+      deleteStudent(event);
+    });
+  });
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+  // الحصول على جميع أزرار الحذف عند تحميل الصفحة
+  const deleteButtons = document.querySelectorAll(".delete img");
+  console.log('Found', deleteButtons.length, 'delete buttons');
+  
+  // إضافة مستمع أحداث لكل زر حذف
+  deleteButtons.forEach(button => {
+    button.addEventListener("click", function(event) {
+      handleDeleteClick(event);
+    });
+  });
+});
+
+// وظيفة معالجة النقر على زر الحذف
+function handleDeleteClick(event) {
+  // الحصول على الصف
+  const cell = event.target.closest('td');
+  const row = cell.closest('tr');
+  const studentId = row.querySelector('td:first-child').textContent.trim();
+  const table = row.closest('table');
+  const trackName = table.id;
+  
+  console.log('Delete clicked for student ID:', studentId, 'in track:', trackName);
+  
+  // عرض مربع تأكيد
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "You won't be able to revert this!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, delete it!',
+    cancelButtonText: 'Cancel'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // استدعاء API لحذف الطالب
+      fetch(`http://127.0.0.1:3000/api/students/delete-student/${trackName}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          'studentId': Number(studentId)
+        })
+      }).then(res => {
+        if (res.status === 200) {
+          row.remove();
+          Swal.fire(
+            'Deleted!',
+            'The student has been deleted.',
+            'success'
+          );
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Delete Failed',
+            text: 'Failed to delete student!',
+          });
+        }
+      }).catch(error => {
+        console.error("Error deleting student:", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred while deleting the student.',
+        });
+      });
+    }
+  });
+}
+
+function setupDeleteLinkObserver() {
+  if (window.MutationObserver) {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+          const newDeleteLinks = document.querySelectorAll(".delete-student:not([data-has-listener])");
+          newDeleteLinks.forEach(link => {
+            link.setAttribute('data-has-listener', 'true');
+            link.addEventListener("click", function(event) {
+              event.preventDefault();
+              deleteStudent(event);
+            });
+            console.log('تمت إضافة مستمع لرابط حذف جديد');
+          });
+        }
+      });
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  setupDeleteLinkObserver();
+});
 function attachTaskWindowHandlers(table) {
   if (!table) return;
   
   console.log('Attaching task window handlers for table:', table.id);
   
-  // Find the grades cells (column index 2)
   const rows = table.querySelectorAll('tbody tr');
   rows.forEach(row => {
     const gradeCell = row.querySelector('td:nth-child(3)');
     if (!gradeCell) return;
     
-    // Remove previous event listeners by cloning the element
     const newGradeCell = gradeCell.cloneNode(true);
     if (gradeCell.parentNode) {
       gradeCell.parentNode.replaceChild(newGradeCell, gradeCell);
     }
     
-    // Add visual indicator that this cell is clickable
     newGradeCell.style.cursor = 'pointer';
     newGradeCell.classList.add('task-clickable');
     
-    // Mark this cell as having the event listener
     newGradeCell.setAttribute('data-has-task-event', 'true');
     
-    // Add click event for task window (using single click instead of double)
     newGradeCell.addEventListener('click', () => {
       showTaskGradesEditor(newGradeCell);
     });
   });
 }
 
-// Add New addStudent
-
 const addStudentButton = document.getElementById("addStudent");
 addStudentButton.addEventListener("click", function () {
-  // Get the currently visible table container
   const visibleContainer = document.querySelector(".table-container[style*='display: block']");
   const table = visibleContainer ? visibleContainer.querySelector("table") : null;
   

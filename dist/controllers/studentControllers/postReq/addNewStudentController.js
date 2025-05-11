@@ -49,10 +49,22 @@ const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             }
         }
         const studentId = existingStudentId || (yield tracksSchema_2.Track.aggregate([{ $unwind: "$trackData" }, { $group: { _id: null, maxId: { $max: "$trackData.ID" } } }]).then(result => { var _a; return (((_a = result[0]) === null || _a === void 0 ? void 0 : _a.maxId) || 0) + 1; }));
-        const getTasks = yield tracksSchema_2.Track.findOne({ trackName });
-        const tasks = getTasks === null || getTasks === void 0 ? void 0 : getTasks.trackData[0].BasicTotal;
-        for (const task of tasks) {
-            task.studentTaskDegree = 0;
+        // Get tasks from the track or create default empty tasks array if none exist
+        const trackData = yield tracksSchema_2.Track.findOne({ trackName });
+        // Initialize tasks array
+        let tasks = [];
+        // Check if track has data and if first student has BasicTotal
+        if (trackData && trackData.trackData && trackData.trackData.length > 0 && trackData.trackData[0].BasicTotal) {
+            tasks = JSON.parse(JSON.stringify(trackData.trackData[0].BasicTotal)); // Deep copy to avoid reference issues
+            // Reset all student task degrees to 0
+            for (const task of tasks) {
+                task.studentTaskDegree = 0;
+            }
+        }
+        else {
+            // If no existing tasks found, create a default empty task
+            console.log('No BasicTotal found for this track, creating default empty tasks array');
+            tasks = [];
         }
         const Student = {
             ID: studentId,

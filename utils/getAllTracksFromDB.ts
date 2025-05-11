@@ -15,7 +15,12 @@ export const getAllTracksFromDB = async () => {
             await track.save();
 
             data.push({
+                _id: track._id,
                 trackName: track.trackName,
+                trackStartDate: track.trackStartDate,
+                trackEndDate: track.trackEndDate,
+                trackStatus: track.trackStatus,
+                trackAssignedTo: track.trackAssignedTo,
                 studentNum: track.trackData.length,
                 trackData: track.trackData,
             });

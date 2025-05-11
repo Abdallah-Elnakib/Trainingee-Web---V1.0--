@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainingee - Track Management</title>
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/sidebar-fixes.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="/css/tracks.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <!-- Logo -->  
+            <div class="logo-container">
+                <div class="logo-inner">
+                    <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14z" />
+                    </svg>
+                </div>
+                <span class="logo-text">TRAININGEE</span>
+            </div>
+            
+            <!-- Main Navigation Menu -->  
+            <div class="nav-menu">
+                <a href="/" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="/tracks" class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <span class="nav-label">Tracks</span>
+                </a>
+                <a href="/users" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <span class="nav-label">Users</span>
+                </a>
+                <a href="/settings" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <span class="nav-label">Settings</span>
+                </a>
+            </div>
+            
+            <!-- Utilities Menu -->
+            <div class="utilities-menu">
+                <div class="section-title">UTILITIES</div>
+                <a href="#" class="utility-item">
+                    <div class="utility-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <span class="utility-label">Reports</span>
+                </a>
+                <a href="#" class="utility-item">
+                    <div class="utility-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <span class="utility-label">Notifications</span>
+                </a>
+            </div>
+            
+            <!-- User Account -->  
+            <div class="user-account">
+                <div class="user-avatar">
+                    <span><%= user.firstName.charAt(0) %><%= user.lastName.charAt(0) %></span>
+                </div>
+                <div class="user-info">
+                    <div class="user-name"><%= user.firstName %> <%= user.lastName %></div>
+                    <div class="user-role">Administrator</div>
+                </div>
+                <button id="Logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-content">
+                    <h1 class="page-title"><i class="fas fa-layer-group text-blue-500 mr-3"></i>Tracks Management</h1>
+                    <p class="page-subtitle">Manage your training tracks and monitor their progress</p>
+                </div>
+                <div class="action-buttons">
+                    <button id="addTrackBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        <span>Add New Track</span>
+                    </button>
+                    <button id="exportBtn" class="btn btn-secondary">
+                        <i class="fas fa-file-export"></i>
+                        <span>Export</span>
+                    </button>
+                    <button id="refreshBtn" class="btn btn-secondary">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-card">
+                <div class="filters-header">
+                    <h3><i class="fas fa-filter mr-2"></i>Filter Tracks</h3>
+                    <button class="toggle-filters" id="toggleFilters">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                </div>
+                <div class="filters-body">
+                    <form class="filters-form">
+                        <div class="form-group">
+                            <label class="form-label" for="statusFilter">Status</label>
+                            <select class="form-control" id="statusFilter">
+                                <option value="" <%= !filters || !filters.status ? 'selected' : '' %>>All Statuses</option>
+                                <option value="Active" <%= filters && filters.status === 'Active' ? 'selected' : '' %>>Active</option>
+                                <option value="Completed" <%= filters && filters.status === 'Completed' ? 'selected' : '' %>>Completed</option>
+                                <option value="Pending" <%= filters && filters.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="dateFrom">From Date</label>
+                            <input type="date" class="form-control" id="dateFrom" value="<%= filters && filters.dateFrom ? filters.dateFrom : '' %>">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="dateTo">To Date</label>
+                            <input type="date" class="form-control" id="dateTo" value="<%= filters && filters.dateTo ? filters.dateTo : '' %>">
+                        </div>
+                        <div class="form-group search-group">
+                            <label class="form-label" for="searchFilter">Search</label>
+                            <div class="search-input-container">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="search" class="form-control" id="searchFilter" placeholder="Search tracks..." value="<%= filters && filters.search ? filters.search : '' %>">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="applyFiltersBtn" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                                <span>Apply Filters</span>
+                            </button>
+                            <button type="reset" id="resetFiltersBtn" class="btn btn-secondary">
+                                <i class="fas fa-undo"></i>
+                                <span>Reset</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tracks Table -->
+            <div class="tracks-table-container">
+                <div class="table-header">
+                    <div class="table-title">
+                        <i class="fas fa-list-alt mr-2"></i>
+                        <span>Track List</span>
+                        <span class="track-count" id="trackCount"><% if (Tracks) { %><%= Tracks.length %><% } else { %>0<% } %> tracks</span>
+                    </div>
+                    <div class="table-actions">
+                        <button class="table-action-btn" title="Download as CSV">
+                            <i class="fas fa-file-csv"></i>
+                        </button>
+                        <button class="table-action-btn" title="Print">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button class="table-action-btn" title="Columns">
+                            <i class="fas fa-columns"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="tracks-table">
+                        <thead>
+                            <tr>
+                                <th>Track Name</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Progress</th>
+                                <th>Status</th>
+                                <th>Assigned To</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                            <tbody>
+                                <% if (Tracks && Tracks.length > 0) { %>
+                                    <% Tracks.forEach(track => { %>
+                                        <% 
+                                            // Calculate progress percentage
+                                            let now = new Date();
+                                            let start = new Date(track.trackStartDate);
+                                            let end = new Date(track.trackEndDate);
+                                            let totalDuration = end - start;
+                                            let elapsedDuration = now - start;
+                                            let progressPercentage = Math.min(Math.max(Math.round((elapsedDuration / totalDuration) * 100), 0), 100);
+                                            
+                                            // Format dates
+                                            let startDate = new Date(track.trackStartDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                                            let endDate = new Date(track.trackEndDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                                            
+                                            // Set status class
+                                            let statusClass = '';
+                                            if (track.trackStatus === 'Active') statusClass = 'status-active';
+                                            else if (track.trackStatus === 'Completed') statusClass = 'status-completed';
+                                            else if (track.trackStatus === 'Pending') statusClass = 'status-pending';
+                                        %>
+                                        <tr>
+                                            <td>
+                                                <div class="track-name"><%= track.trackName %></div>
+                                                <div class="text-xs text-gray-500"><%= track.trackData ? track.trackData.length : 0 %> students enrolled</div>
+                                            </td>
+                                            <td><%= startDate %></td>
+                                            <td><%= endDate %></td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" style="width: <%= (progressPercentage || 0) %> %"></div>
+                                                </div>
+                                                <div class="text-xs text-gray-500 mt-1"><%= progressPercentage %>% complete</div>
+                                            </td>
+                                            <td>
+                                                <span class="status-badge <%= statusClass %>"><%= track.trackStatus %></span>
+                                            </td>
+                                            <td><%= track.trackAssignedTo %></td>
+                                            <td class="action-cell">
+                                                <button class="action-btn edit-btn" data-track-id="<%= track._id %>" title="Edit track">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="action-btn delete-btn" title="Delete track" data-track-id="<%= track._id ? track._id : '' %>" onclick="deleteTrack('<%= track._id ? track._id : '' %>')"><i class="fas fa-trash-alt"></i></button>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Empty State (No Tracks) -->
+                    <% if (!Tracks || Tracks.length === 0) { %>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <h3>No Tracks Found</h3>
+                        <p>Start by adding a new track to your training program</p>
+                        <button id="addTrackEmptyBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            <span>Add New Track</span>
+                        </button>
+                    </div>
+                    <% } %>
+                </div>
+
+                <!-- Pagination -->
+                <% if (Tracks && Tracks.length > 0 && pagination) { %>
+                <div class="pagination">
+                    <div class="pagination-info">
+                        <span>Showing <span class="font-medium"><%= pagination.startItem %></span> to <span class="font-medium"><%= pagination.endItem %></span> of <span class="font-medium"><%= pagination.totalItems %></span> tracks</span>
+                    </div>
+                    <div class="pagination-actions">
+                        <select class="per-page-select" id="perPageSelect">
+                            <option value="10" <%= pagination.itemsPerPage === 10 ? 'selected' : '' %>>10 per page</option>
+                            <option value="25" <%= pagination.itemsPerPage === 25 ? 'selected' : '' %>>25 per page</option>
+                            <option value="50" <%= pagination.itemsPerPage === 50 ? 'selected' : '' %>>50 per page</option>
+                            <option value="100" <%= pagination.itemsPerPage === 100 ? 'selected' : '' %>>100 per page</option>
+                        </select>
+                        <div class="pagination-buttons">
+                            <button class="pagination-btn" id="prevPageBtn" <%= pagination.currentPage <= 1 ? 'disabled' : '' %>>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="pagination-pages" id="paginationPages">
+                                <% 
+                                // Display up to 5 page buttons
+                                const maxPages = Math.min(pagination.totalPages, 5);
+                                let startPage = Math.max(1, pagination.currentPage - 2);
+                                let endPage = Math.min(pagination.totalPages, startPage + maxPages - 1);
+                                
+                                // Adjust startPage if we're near the end
+                                if (endPage - startPage < maxPages - 1) {
+                                    startPage = Math.max(1, endPage - maxPages + 1);
+                                }
+                                
+                                for (let i = startPage; i <= endPage; i++) { %>
+                                    <button class="pagination-page <%= i === pagination.currentPage ? 'active' : '' %>" 
+                                            data-page="<%= i %>"><%= i %></button>
+                                <% } %>
+                            </div>
+                            <button class="pagination-btn" id="nextPageBtn" <%= pagination.currentPage >= pagination.totalPages ? 'disabled' : '' %>>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Track Modal -->
+    <div class="modal-backdrop" id="trackModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add New Track</h3>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="trackForm">
+                    <input type="hidden" id="trackId">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" for="trackName">Track Name*</label>
+                        <input type="text" class="form-control" id="trackName" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" for="trackStartDate">Start Date*</label>
+                        <input type="date" class="form-control" id="trackStartDate" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" for="trackEndDate">End Date*</label>
+                        <input type="date" class="form-control" id="trackEndDate" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" for="trackStatus">Status*</label>
+                        <select class="form-control" id="trackStatus" required>
+                            <option value="Pending">Pending</option>
+                            <option value="Active">Active</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" for="trackAssignedTo">Assigned To*</label>
+                        <input type="text" class="form-control" id="trackAssignedTo" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelTrack">Cancel</button>
+                <button class="btn btn-primary" id="saveTrack">Save Track</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/tracks.js"></script>
+</body>
+</html>
