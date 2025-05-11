@@ -12,7 +12,8 @@ exports.userSchema = zod_1.z.object({
     username: zod_1.z.string().min(1, 'Username is required'),
     email: zod_1.z.string().email('Invalid email'),
     password: zod_1.z.string().min(8, 'Password must be at least 8 characters'),
-    role: zod_1.z.string().min(1, 'Role is required'),
+    role: zod_1.z.enum(['admin', 'supervisor', 'instructor'], { errorMap: () => ({ message: 'Role is required' }) }),
+    status: zod_1.z.string().min(1, 'Status is required'),
 });
 const userSchemaMongo = new mongoose_1.default.Schema({
     firstName: { type: String, required: true },
@@ -20,7 +21,8 @@ const userSchemaMongo = new mongoose_1.default.Schema({
     username: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
-    role: { type: String, required: true },
+    role: { type: String, required: true, enum: ['admin', 'supervisor', "instructor"] },
     resetPasswordToken: { type: String, createdAt: { type: Date, default: Date.now, expires: '1h' }, },
+    status: { type: String, enum: ['active', 'inactive'], default: 'active' },
 });
 exports.Users = mongoose_1.default.model("Users", userSchemaMongo);

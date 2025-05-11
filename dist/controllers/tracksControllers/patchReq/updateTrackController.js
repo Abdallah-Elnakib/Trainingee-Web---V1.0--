@@ -1,0 +1,69 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.updateTrackInfo = void 0;
+const tracksSchema_1 = require("../../../models/tracksSchema");
+const updateTrackInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const trackId = req.params.trackId;
+        const { trackName, trackStartDate, trackEndDate, trackStatus, trackAssignedTo } = req.body;
+        if (!trackId) {
+            res.status(400).json({ message: 'Track ID is required' });
+            return;
+        }
+        // Check if the track exists
+        const existingTrack = yield tracksSchema_1.Track.findById(trackId);
+        if (!existingTrack) {
+            res.status(404).json({ message: 'Track not found' });
+            return;
+        }
+        // Check if the new track name already exists (only if name is being changed)
+        if (trackName && trackName !== existingTrack.trackName) {
+            const trackWithSameName = yield tracksSchema_1.Track.findOne({ trackName });
+            if (trackWithSameName && String(trackWithSameName._id) !== trackId) {
+                res.status(409).json({ message: 'Track name already exists' });
+                return;
+            }
+        }
+        // Update track information
+        const updatedTrack = yield tracksSchema_1.Track.findByIdAndUpdate(trackId, {
+            trackName: trackName || existingTrack.trackName,
+            trackStartDate: trackStartDate || existingTrack.trackStartDate,
+            trackEndDate: trackEndDate || existingTrack.trackEndDate,
+            trackStatus: trackStatus || existingTrack.trackStatus,
+            trackAssignedTo: trackAssignedTo || existingTrack.trackAssignedTo,
+        }, { new: true });
+        if (!updatedTrack) {
+            res.status(500).json({ message: 'Failed to update track' });
+            return;
+        }
+        res.status(200).json({
+            message: 'Track updated successfully',
+            track: {
+                _id: updatedTrack._id,
+                trackName: updatedTrack.trackName,
+                trackStartDate: updatedTrack.trackStartDate,
+                trackEndDate: updatedTrack.trackEndDate,
+                trackStatus: updatedTrack.trackStatus,
+                trackAssignedTo: updatedTrack.trackAssignedTo,
+                studentNum: updatedTrack.trackData ? updatedTrack.trackData.length : 0
+            }
+        });
+    }
+    catch (error) {
+        console.error('Error updating track:', error);
+        res.status(500).json({
+            message: 'Internal server error',
+            error: error instanceof Error ? error.message : String(error)
+        });
+    }
+});
+exports.updateTrackInfo = updateTrackInfo;

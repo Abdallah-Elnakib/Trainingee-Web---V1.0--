@@ -20,14 +20,19 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const connDB_1 = require("./config/connDB");
 const cors_1 = __importDefault(require("cors"));
 const express_session_1 = __importDefault(require("express-session"));
+const path_1 = __importDefault(require("path"));
 const authRouter_1 = __importDefault(require("./router/authRouter"));
 const TracksRouter_1 = __importDefault(require("./router/TracksRouter"));
 const studentsRouter_1 = __importDefault(require("./router/studentsRouter"));
 const homeController_1 = require("./controllers/authControllers/getReq/homeController");
 const tracksController_1 = require("./controllers/tracksControllers/getReq/tracksController");
+const studentsPageController_1 = require("./controllers/studentsControllers/getReq/studentsPageController");
 const verifyJWT_1 = require("./middleware/verifyJWT");
 exports.app = (0, express_1.default)();
 (0, connDB_1.connDB)();
+// Configurar el motor de plantillas EJS
+exports.app.set('view engine', 'ejs');
+exports.app.set('views', path_1.default.join(__dirname, '../views')); // Ajuste de ruta para apuntar a la carpeta views desde dist
 exports.app.use(express_1.default.json());
 exports.app.use((0, cors_1.default)());
 exports.app.use((0, express_session_1.default)({
@@ -41,9 +46,9 @@ exports.app.use(express_1.default.static('public'));
 exports.app.use('/api/auth', authRouter_1.default);
 exports.app.use('/api/tracks', TracksRouter_1.default);
 exports.app.use('/api/students', studentsRouter_1.default);
-// Page Routes
 exports.app.get('/', verifyJWT_1.verifyJWT, homeController_1.home);
 exports.app.get('/tracks', verifyJWT_1.verifyJWT, tracksController_1.tracksPage);
+exports.app.get('/students', verifyJWT_1.verifyJWT, studentsPageController_1.studentsPage);
 mongoose_1.default.connection.once('open', () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('Database connected successfully...................');
     const port = process.env.PORT || 3000;

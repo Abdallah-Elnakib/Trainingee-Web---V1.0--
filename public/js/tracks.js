@@ -22,6 +22,17 @@ const perPageSelect = document.getElementById('perPageSelect');
 const paginationPages = document.getElementById('paginationPages');
 const prevPageBtn = document.getElementById('prevPageBtn');
 const nextPageBtn = document.getElementById('nextPageBtn');
+const tableBody = document.getElementById('tracks-table-body');
+const paginationContainer = document.getElementById('pagination-container');
+
+// Variables for pagination and data
+let currentPage = 1;
+let totalPages = 1;
+let itemsPerPage = 10;
+let tracksData = [];
+
+// Store all tracks data for client-side operations - used for editing tracks
+let allTracksData = [];
 
 // Open Modal for New Track
 function openNewTrackModal() {
@@ -31,29 +42,65 @@ function openNewTrackModal() {
     trackModal.style.display = 'flex';
 }
 
-// Open Modal for Editing Track
+// Open Modal for Editing Track using client-side data
 function openEditTrackModal(trackId) {
+    console.log('Opening edit modal for track ID:', trackId);
     modalTitle.textContent = 'Edit Track';
-    // Fetch track data - using the all-tracks endpoint and filtering for specific track
-    fetch(`/api/tracks/all-tracks`)
-        .then(response => response.json())
-        .then(track => {
-            trackIdInput.value = track._id;
-            document.getElementById('trackName').value = track.trackName;
-            document.getElementById('trackStartDate').value = formatDateForInput(track.trackStartDate);
-            document.getElementById('trackEndDate').value = formatDateForInput(track.trackEndDate);
-            document.getElementById('trackStatus').value = track.trackStatus;
-            document.getElementById('trackAssignedTo').value = track.trackAssignedTo;
-            trackModal.style.display = 'flex';
-        })
-        .catch(error => {
-            console.error('Error fetching track:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to fetch track data',
-            });
+    
+    // Show loading indicator while we retrieve the track data
+    Swal.fire({
+        title: 'Loading...',
+        text: 'Getting track information',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // Check if we have the track data in cache
+    const cachedTrack = allTracksData.find(t => t._id && t._id.toString() === trackId.toString());
+    
+    // If found in cache, use it
+    if (cachedTrack) {
+        console.log('Track found in cache, using cached data');
+        loadTrackDataFromCache(trackId);
+    } else {
+        console.log('Track not found in cache, fetching directly from server');
+        // Fetch directly from the server using our new function
+        fetchTrackById(trackId);
+    }
+}
+
+// Helper function to load a track from the cache
+function loadTrackDataFromCache(trackId) {
+    const track = allTracksData.find(t => t._id.toString() === trackId.toString());
+    
+    // Close loading indicator
+    Swal.close();
+    
+    if (!track) {
+        console.error('Track not found in client-side data:', trackId);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Track data not found. Please refresh the page and try again.',
         });
+        return;
+    }
+    
+    console.log('Found track in client-side data:', track);
+    
+    // Populate the form with track data
+    trackIdInput.value = track._id;
+    document.getElementById('trackName').value = track.trackName || '';
+    document.getElementById('trackStartDate').value = formatDateForInput(track.trackStartDate) || '';
+    document.getElementById('trackEndDate').value = formatDateForInput(track.trackEndDate) || '';
+    document.getElementById('trackStatus').value = track.trackStatus || '';
+    document.getElementById('trackAssignedTo').value = track.trackAssignedTo || '';
+    
+    // Display the modal
+    trackModal.style.display = 'flex';
+    console.log('Edit modal displayed successfully for track:', track.trackName);
 }
 
 // Close Modal
@@ -65,6 +112,191 @@ function closeTrackModal() {
 function formatDateForInput(dateString) {
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
+}
+
+// Initialize the page and load all tracks data into cache
+function initializeTracksPage() {
+    console.log('Initializing tracks page...');
+    
+    // Pre-load all tracks data into cache first, then fetch current page view
+    loadAllTracksData()
+        .then(() => {
+            // After tracks data is loaded, fetch current page
+            fetchTracks();
+        })
+        .catch(err => {
+            console.error('Error initializing tracks page:', err);
+            // Still try to fetch tracks for current page even if preloading failed
+            fetchTracks();
+        });
+}
+
+// Function to load all tracks with retry mechanism
+function loadAllTracksData(retry = 3) {
+    console.log(`Loading all tracks data... (${retry} retries left)`);
+    
+    return new Promise((resolve, reject) => {
+        fetch('/api/tracks/all-tracks')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to preload tracks data: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.tracks || !Array.isArray(data.tracks)) {
+                    console.warn('Invalid or empty tracks data format received:', data);
+                    // Still set an empty array rather than throwing an error
+                    allTracksData = [];
+                } else {
+                    allTracksData = data.tracks;
+                }
+                
+                console.log('Preloaded all tracks data into cache:', allTracksData.length, 'tracks');
+                resolve(allTracksData);
+            })
+            .catch(error => {
+                console.error('Error preloading tracks data:', error);
+                
+                // Retry logic
+                if (retry > 0) {
+                    console.log(`Retrying in 2 seconds... (${retry} retries left)`);
+                    setTimeout(() => {
+                        loadAllTracksData(retry - 1)
+                            .then(resolve)
+                            .catch(reject);
+                    }, 2000);
+                } else {
+                    // Create an empty array at minimum
+                    if (!Array.isArray(allTracksData)) {
+                        allTracksData = [];
+                    }
+                    
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Data Loading Issue',
+                        text: 'Failed to load track data. Some features may not work correctly. Please refresh the page.',
+                        confirmButtonText: 'Refresh Now',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.reload();
+                        }
+                    });
+                    
+                    reject(error);
+                }
+            });
+    });
+}
+
+// Function to fetch a single track by ID directly from the server
+function fetchTrackById(trackId) {
+    console.log('Fetching track directly from server:', trackId);
+    
+    // Close any existing Sweet Alert
+    if (Swal.isVisible()) {
+        Swal.close();
+    }
+    
+    // Show loading
+    Swal.fire({
+        title: 'Loading...',
+        text: 'Fetching track data directly',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // المسار /track/:trackId غير موجود، لذلك سنستخدم مسار all-tracks ثم نبحث عن المسار المطلوب في البيانات المستلمة
+    fetch(`/api/tracks/all-tracks`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Failed to fetch track: ${response.status} ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('All tracks data received:', data);
+            
+            if (!data) {
+                throw new Error('No data received from server');
+            }
+            
+            if (Array.isArray(data)) {
+                allTracksData = data;
+            } else if (data.tracks && Array.isArray(data.tracks)) {
+                allTracksData = data.tracks;
+            } else {
+                throw new Error('Invalid tracks data format received');
+            }
+            console.log('Updated tracks cache. Total tracks:', allTracksData.length);
+            
+            // Find the specific track we need
+            const track = allTracksData.find(t => t && t._id && t._id.toString() === trackId.toString());
+            
+            if (!track) {
+                throw new Error(`Track with ID ${trackId} not found in the data`);
+            }
+            
+            console.log('Found requested track:', track.trackName);
+            
+            try {
+                // Now load from cache
+                loadTrackDataFromCache(trackId);
+            } catch (err) {
+                console.error('Error handling track data:', err);
+                // Try to directly populate the form if cache handling fails
+                populateTrackForm(track);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching track:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Could not load track data. Please refresh and try again.',
+                confirmButtonText: 'Refresh',
+                showCancelButton: true,
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.reload();
+                } else {
+                    closeTrackModal();
+                }
+            });
+        });
+}
+
+// Helper function to directly populate form (bypass cache)
+function populateTrackForm(track) {
+    // Close loading indicator
+    Swal.close();
+    
+    if (!track || !track._id) {
+        console.error('Invalid track data for form population');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Invalid track data. Please try again.',
+        });
+        return;
+    }
+    
+    console.log('Directly populating form with track data:', track);
+    
+    // Populate the form with track data
+    trackIdInput.value = track._id;
+    document.getElementById('trackName').value = track.trackName || '';
+    document.getElementById('trackStartDate').value = formatDateForInput(track.trackStartDate) || '';
+    document.getElementById('trackEndDate').value = formatDateForInput(track.trackEndDate) || '';
+    document.getElementById('trackStatus').value = track.trackStatus || '';
+    document.getElementById('trackAssignedTo').value = track.trackAssignedTo || '';
+    
+    // Display the modal
+    trackModal.style.display = 'flex';
+    console.log('Edit modal displayed successfully for track:', track.trackName);
 }
 
 // Save Track
@@ -87,9 +319,20 @@ function saveTrackData() {
     console.log('Sending track data:', trackData);
 
     const trackId = trackIdInput.value;
-    // Use the add-track endpoint for both new tracks and updates
-    const url = '/api/tracks/add-track';
-    const method = 'POST';
+    let url, method;
+    
+    // Check if we're updating an existing track or creating a new one
+    if (trackId) {
+        // Update existing track
+        url = `/api/tracks/update-track/${trackId}`;
+        method = 'PATCH';
+        console.log('Updating existing track:', trackId);
+    } else {
+        // Add new track
+        url = '/api/tracks/add-track';
+        method = 'POST';
+        console.log('Creating new track');
+    }
 
     fetch(url, {
         method: method,
@@ -146,16 +389,26 @@ function saveTrackData() {
         });
 }
 
-// Delete Track - Simplified version
-function deleteTrack(trackId) {
+// Delete Track - Revised version to work with 'this' element reference
+function deleteTrack(element) {
+    // If we received an element instead of a direct ID string, extract the ID from data attribute
+    let trackId;
+    
+    if (typeof element === 'object' && element !== null) {
+        // Extract track ID from the data attribute
+        trackId = element.getAttribute('data-track-id');
+        console.log('Extracted track ID from element:', trackId);
+    } else {
+        // For backward compatibility if a direct ID is passed
+        trackId = element;
+    }
+    
     // More detailed debugging
     console.log('Attempting to delete track with ID:', trackId);
     console.log('Type of trackId:', typeof trackId);
-    console.log('trackId value:', trackId);
-    console.log('trackId length:', trackId ? trackId.length : 0);
     
     // Handle empty strings, undefined, and null values
-    if (!trackId || trackId === 'undefined' || trackId === 'null' || trackId.trim() === '') {
+    if (!trackId || trackId === 'undefined' || trackId === 'null' || trackId === '') {
         console.error('No valid track ID provided for deletion!');
         Swal.fire({
             icon: 'error',
@@ -164,9 +417,6 @@ function deleteTrack(trackId) {
         });
         return;
     }
-    
-    // Clean up the ID if it has quotes
-    trackId = trackId.replace(/["']/g, '');
     
     Swal.fire({
         title: 'Are you sure?',

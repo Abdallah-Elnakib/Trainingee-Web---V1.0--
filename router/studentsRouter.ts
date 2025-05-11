@@ -6,23 +6,28 @@ import { deleteStudent } from '../controllers/studentControllers/deleteReq/delet
 import { getStudentTasks } from '../controllers/studentsControllers/getReq/getStudentTasksController';
 import { updateStudentTasks } from '../controllers/studentsControllers/patchReq/updateStudentTasksController';
 import { updateStudentStatus } from '../controllers/studentsControllers/patchReq/updateStudentStatusController';
+import { getAllStudents } from '../controllers/studentsControllers/getReq/getAllStudentsController';
+import { getStudentDetails } from '../controllers/studentsControllers/getReq/getStudentDetailsController';
+import { verifyJWT } from '../middleware/verifyJWT';
 
 const router: Router = express.Router();
+
+router.use(verifyJWT); 
 
 router.post('/add-new-student', addNewStudent);
 router.get('/get-all-students/:trackName', getAllStudentsFromTrack);
 
-// Support both old and new path formats for updating student data
 router.patch('/update-student-data/:trackName', updateDataFromStudent);
 router.patch('/update-student/:trackName', updateDataFromStudent);
 
 router.delete('/delete-student/:trackName', deleteStudent);
 
-// New endpoints for task management
 router.get('/get-student-tasks/:trackName/:studentId', getStudentTasks);
 router.patch('/update-student-tasks/:trackName/:studentId', updateStudentTasks);
 
-// New endpoint for updating student status
 router.patch('/update-student-status/:trackName', updateStudentStatus);
+
+router.get('/all-students', getAllStudents as any);
+router.get('/student-details/:studentId', getStudentDetails as any);
 
 export default router;

@@ -19,12 +19,12 @@ const verifyJWT = (req, res, next) => __awaiter(void 0, void 0, void 0, function
     try {
         const token = (_a = req.session) === null || _a === void 0 ? void 0 : _a.refreshToken;
         if (!token) {
-            res.status(401).render('login.ejs', { error: "Unauthorized" });
+            res.status(401).render('login', { error: "Unauthorized" });
             return;
         }
         jsonwebtoken_1.default.verify(token, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
             if (err) {
-                res.status(401).render('login.ejs', { error: "Unauthorized" });
+                res.status(401).render('login', { error: "Unauthorized" });
                 return;
             }
             req.user = decoded; // Cast to DecodedToken interface

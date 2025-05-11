@@ -20,13 +20,13 @@ export const verifyJWT = async (req: Request, res: Response, next: NextFunction)
   try {
     const token = req.session?.refreshToken;
     if (!token) {
-        res.status(401).render('login.ejs', { error: "Unauthorized" });
+        res.status(401).render('login', { error: "Unauthorized" });
         return;
     }
 
     jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string, async (err, decoded) => {
       if (err) {
-        res.status(401).render('login.ejs', { error: "Unauthorized" });
+        res.status(401).render('login', { error: "Unauthorized" });
         return;
       }
       req.user = decoded as DecodedToken; // Cast to DecodedToken interface

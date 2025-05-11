@@ -23,6 +23,6 @@ router.post('/forgot-Password', forgotPasswordController_1.forgotPassword);
 router.get('/forgot-Password', forgotPasswordController_2.forgotPasswordform);
 router.get('/reset-Password', resetPasswordController_1.resetPassword);
 router.post('/reset-Password', resetPasswordController_2.resetPasswordInDatabase);
-router.use(verifyJWT_1.verifyJWT); // Middleware to verify JWT for all routes below this line
+router.use(verifyJWT_1.verifyJWT);
 router.get('/home', homeController_1.home);
 exports.default = router;

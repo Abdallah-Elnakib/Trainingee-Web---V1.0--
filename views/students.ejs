@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainingee - Student Management</title>
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/sidebar-fixes.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="/css/tracks.css">
+    <link rel="stylesheet" href="/css/students.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <!-- Logo -->  
+            <div class="logo-container">
+                <div class="logo-inner">
+                    <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998a12.078 12.078 0 01.665-6.479L12 14z" />
+                    </svg>
+                </div>
+                <span class="logo-text">Trainingee</span>
+            </div>
+            
+            <!-- Main Navigation Menu -->  
+            <div class="nav-menu">
+                <a href="/" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="/tracks" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <span class="nav-label">Tracks</span>
+                </a>
+                <a href="/students" class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <span class="nav-label">Students</span>
+                </a>
+                <a href="/users" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <span class="nav-label">Users</span>
+                </a>
+                <a href="/settings" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <span class="nav-label">Settings</span>
+                </a>
+            </div>
+            
+            <!-- Utilities Menu -->
+            <div class="utilities-menu">
+                <div class="section-title">UTILITIES</div>
+                <a href="#" class="utility-item">
+                    <div class="utility-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <span class="utility-label">Reports</span>
+                </a>
+                <a href="#" class="utility-item">
+                    <div class="utility-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <span class="utility-label">Notifications</span>
+                </a>
+            </div>
+            
+            <!-- User Account -->  
+            <div class="user-account">
+                <div class="user-avatar">
+                    <span><%= userName ? userName.charAt(0) : 'U' %></span>
+                </div>
+                <div class="user-info">
+                    <div class="user-name"><%= userName || 'User' %></div>
+                    <div class="user-role">Administrator</div>
+                </div>
+                <button id="Logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-content">
+                    <h1 class="page-title"><i class="fas fa-user-graduate mr-2"></i>Students Management</h1>
+                    <p class="page-subtitle">Manage your students and view their performance across tracks</p>
+                </div>
+                <div class="action-buttons">
+                    <button id="exportCsv" class="btn btn-primary">
+                        <i class="fas fa-file-export mr-2"></i>
+                        <span>Export CSV</span>
+                    </button>
+                    <button id="refreshData" class="btn btn-secondary">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="totalStudents">0</h3>
+                        <p class="stat-label">Total Students</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="activeStudents">0</h3>
+                        <p class="stat-label">Active Students</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-value" id="totalTracks"><%= Tracks.length %></h3>
+                        <p class="stat-label">Active Tracks</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters Section -->
+            <div class="filters-card">
+                <div class="filters-header">
+                    <h3><i class="fas fa-filter mr-2"></i>Filter Students</h3>
+                    <button class="toggle-filters" id="toggleFilters">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                </div>
+                <div class="filters-body">
+                    <form id="filterForm" class="filters-form">
+                        <div class="form-group">
+                            <label class="form-label" for="trackFilter">Track</label>
+                            <select class="form-control" id="trackFilter">
+                                <option value="all">All Tracks</option>
+                                <% Tracks.forEach(track => { %>
+                                    <option value="<%= track.trackName %>"><%= track.trackName %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="statusFilter">Status</label>
+                            <select class="form-control" id="statusFilter">
+                                <option value="all">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Active">Active</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Dropped">Dropped</option>
+                            </select>
+                        </div>
+                        <div class="form-group search-group">
+                            <label class="form-label" for="searchFilter">Search</label>
+                            <div class="search-input-container">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="search" class="form-control" id="searchFilter" placeholder="Search by name or ID...">
+                                <button type="button" id="clearSearchBtn" class="clear-btn">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="applyFiltersBtn" class="btn btn-primary">
+                                <i class="fas fa-search mr-2"></i>
+                                <span>Apply Filters</span>
+                            </button>
+                            <button type="reset" id="resetFiltersBtn" class="btn btn-secondary">
+                                <i class="fas fa-undo mr-2"></i>
+                                <span>Reset</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Students Table Section -->
+            <div class="tracks-table-container">
+                <div class="table-header">
+                    <div class="table-title">
+                        <i class="fas fa-user-graduate mr-2"></i>
+                        <span>Student List</span>
+                        <span class="track-count" id="studentCount">0 students</span>
+                    </div>
+                    <div class="table-actions">
+                        <button class="table-action-btn" id="printTableBtn" title="Print table">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button class="table-action-btn" id="exportTableBtn" title="Export table">
+                            <i class="fas fa-file-csv"></i>
+                        </button>
+                        <button class="table-action-btn" title="Columns">
+                            <i class="fas fa-columns"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="loadingState" class="loading-state" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Loading students data...</p>
+                </div>
+                
+                <!-- No Data Message -->
+                <div id="noStudentsMessage" class="no-data-message" style="display: none;">
+                    <div class="no-data-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3>No Students Found</h3>
+                    <p>There are no students matching your search criteria.</p>
+                </div>
+                
+                <!-- Students Table -->
+                <div class="table-responsive">
+                    <table class="tracks-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="id">Student ID <i class="fas fa-sort"></i></th>
+                                <th data-sort="name">Name <i class="fas fa-sort"></i></th>
+                                <th data-sort="tracks">Total Tracks <i class="fas fa-sort"></i></th>
+                                <th data-sort="status">Status <i class="fas fa-sort"></i></th>
+                                <th data-sort="grades">Total Degrees <i class="fas fa-sort"></i></th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body">
+                            <!-- Student rows will be dynamically added here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination Controls -->
+                <div id="pagination-container" class="pagination-container">
+                    <div class="pagination-info">
+                        <span>Showing <span id="startItem">0</span>-<span id="endItem">0</span> of <span id="totalItems">0</span> entries</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button id="prevPageBtn" class="pagination-btn" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div id="paginationPages" class="pagination-pages"></div>
+                        <button id="nextPageBtn" class="pagination-btn" disabled>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="per-page-select">
+                        <label for="perPageSelect">Items per page:</label>
+                        <select id="perPageSelect" class="form-control">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Student Details Modal -->
+    <div class="modal-overlay" id="studentModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle" class="modal-title">Student Details</h3>
+                <button class="close-modal" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Student Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="profile-info">
+                        <h3 id="studentName" class="profile-name">Student Name</h3>
+                        <p class="profile-meta">ID: <span id="studentId">-</span></p>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat-box">
+                            <div class="stat-value" id="totalTracksCount">0</div>
+                            <div class="stat-label">Tracks</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="totalTasksCount">0</div>
+                            <div class="stat-label">Tasks</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="averageScore">0</div>
+                            <div class="stat-label">Avg. Score</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tabs Navigation -->
+                <div class="tabs-navigation">
+                    <button class="tab-button active" data-tab="overview">Overview</button>
+                    <button class="tab-button" data-tab="tracks">Enrolled Tracks</button>
+                    <button class="tab-button" data-tab="performance">Performance</button>
+                </div>
+                
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div id="overview-tab" class="tab-pane active">
+                        <div class="info-section">
+                            <h4 class="section-heading">Personal Information</h4>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Email</div>
+                                    <div class="info-value" id="studentEmail">-</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Phone</div>
+                                    <div class="info-value" id="studentPhone">-</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Location</div>
+                                    <div class="info-value" id="studentLocation">-</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Join Date</div>
+                                    <div class="info-value" id="studentJoinDate">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-section">
+                            <h4 class="section-heading">Status Summary</h4>
+                            <div class="status-cards">
+                                <div class="status-card">
+                                    <div class="status-icon">
+                                        <i class="fas fa-graduation-cap"></i>
+                                    </div>
+                                    <div class="status-info">
+                                        <div class="status-value" id="studentStatus">Active</div>
+                                        <div class="status-label">Current Status</div>
+                                    </div>
+                                </div>
+                                <div class="status-card">
+                                    <div class="status-icon">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </div>
+                                    <div class="status-info">
+                                        <div class="status-value" id="lastActivityDate">-</div>
+                                        <div class="status-label">Last Activity</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tracks Tab -->
+                    <div id="tracks-tab" class="tab-pane">
+                        <div class="enrolled-tracks" id="studentTracksList">
+                            <!-- Tracks will be loaded dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Tab -->
+                    <div id="performance-tab" class="tab-pane">
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                        <div class="performance-stats" id="performanceStatsList">
+                            <!-- Performance stats will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="exportStudentData" class="btn btn-primary">
+                    <i class="fas fa-download mr-2"></i>Export Data
+                </button>
+                <button class="btn btn-secondary" id="closeModalBtn">
+                    <i class="fas fa-times mr-2"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <!-- Removed reference to sidebar-fixes.js as it doesn't exist -->
+    <script src="/js/students.js"></script>
+
+    <script>
+        // Initialize the page when document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            
+            // Logout button event
+            document.getElementById('Logout').addEventListener('click', function() {
+                // Basic logout confirmation
+                Swal.fire({
+                    title: 'Logout',
+                    text: 'Are you sure you want to logout?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, logout',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/logout';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

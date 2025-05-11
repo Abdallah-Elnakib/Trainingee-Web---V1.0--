@@ -28,7 +28,7 @@ router.get('/reset-Password', resetPassword);
 router.post('/reset-Password', resetPasswordInDatabase);
 
 
-router.use(verifyJWT); // Middleware to verify JWT for all routes below this line
+router.use(verifyJWT); 
 router.get('/home', home)
 
 
