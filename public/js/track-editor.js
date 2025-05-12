@@ -165,9 +165,35 @@ function closeTrackModal() {
 }
 
 // Delete track
-function deleteTrack(trackId) {
-    if (!trackId) {
-        console.error('No track ID provided for deletion');
+function deleteTrack(element) {
+    // Extract track ID from element if it's an object
+    let trackId;
+    
+    if (typeof element === 'object' && element !== null) {
+        // Try to get the data-track-id attribute
+        trackId = element.getAttribute('data-track-id');
+        
+        // If not found directly, try to find it in a parent element
+        if (!trackId && element.closest) {
+            const closestElement = element.closest('[data-track-id]');
+            if (closestElement) {
+                trackId = closestElement.getAttribute('data-track-id');
+            }
+        }
+        
+        console.log('Extracted track ID for deletion:', trackId);
+    } else {
+        // If a direct ID string was passed
+        trackId = element;
+    }
+    
+    if (!trackId || trackId === 'undefined' || trackId === 'null' || trackId === '' || trackId === 'javascript:void(0)') {
+        console.error('No valid track ID provided for deletion');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Invalid track ID: ' + (trackId || 'empty')
+        });
         return;
     }
     

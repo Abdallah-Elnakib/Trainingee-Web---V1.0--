@@ -394,26 +394,41 @@ function deleteTrack(element) {
     // If we received an element instead of a direct ID string, extract the ID from data attribute
     let trackId;
     
+    // Fix the issue related to retrieving the track ID
     if (typeof element === 'object' && element !== null) {
-        // Extract track ID from the data attribute
+        // First try to directly get the data-track-id attribute from the element
         trackId = element.getAttribute('data-track-id');
-        console.log('Extracted track ID from element:', trackId);
-    } else {
-        // For backward compatibility if a direct ID is passed
+        
+        // If the element doesn't have the attribute directly, try to find a parent with it
+        if (!trackId && element.closest) {
+            const closestElement = element.closest('[data-track-id]');
+            if (closestElement) {
+                trackId = closestElement.getAttribute('data-track-id');
+            }
+        }
+        
+        // If we still don't have a valid ID and element has a dataset property, try that
+        if (!trackId && element.dataset && element.dataset.trackId) {
+            trackId = element.dataset.trackId;
+        }
+        
+        console.log('Extracted track ID:', trackId);
+    } else if (typeof element === 'string') {
+        // If a direct ID string was passed
         trackId = element;
     }
     
-    // More detailed debugging
+    // Additional logging for debugging
     console.log('Attempting to delete track with ID:', trackId);
     console.log('Type of trackId:', typeof trackId);
     
-    // Handle empty strings, undefined, and null values
-    if (!trackId || trackId === 'undefined' || trackId === 'null' || trackId === '') {
+    // Handle empty strings, undefined values, null values, or invalid values
+    if (!trackId || trackId === 'undefined' || trackId === 'null' || trackId === '' || trackId === 'javascript:void(0)') {
         console.error('No valid track ID provided for deletion!');
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Missing track ID for deletion',
+            text: 'Invalid track ID format: ' + (trackId || 'empty'),
         });
         return;
     }

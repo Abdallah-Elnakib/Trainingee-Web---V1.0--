@@ -1,78 +1,369 @@
 import { Request, Response } from 'express';
 import { Track } from '../../../models/tracksSchema';
 
+// تعريف نوع البيانات لمسار الطالب
+interface StudentTrackData {
+    trackId: any;
+    trackName: string;
+    trackStartDate?: Date;
+    trackEndDate?: Date;
+    trackStatus?: string;
+    studentData: {
+        progress: number;
+        averageScore: number;
+        totalTasks: number;
+        completedTasks: number;
+        tasks: any[];
+        comments: any[];
+    };
+}
+
+// تعريف نوع البيانات لتفاصيل الطالب
+interface StudentDetails {
+    studentInfo: {
+        id: string | number;
+        name: string;
+        email?: string;
+        phone?: string;
+        joinDate?: string;
+    };
+    tracks: StudentTrackData[];
+    overallProgress: number;
+    averageScore: number;
+    completedTasks: number;
+    totalTasks: number;
+}
+
+
+// Helper function to calculate student progress in a track
+function calculateStudentProgress(student: any): number {
+    // Try to find task data in various possible properties
+    const tasks = student?.BasicTotal || student?.Tasks || student?.tasks || [];
+    if (!student || !Array.isArray(tasks) || tasks.length === 0) {
+        return 0;
+    }
+    
+    // Filter out invalid tasks
+    const validTasks = tasks.filter((task: any) => task !== null && task !== undefined);
+    const totalTasks = validTasks.length;
+    if (totalTasks === 0) return 0;
+    
+    const completedTasks = validTasks.filter((task: any) => {
+        // Check all possible completion indicators
+        return (
+            // Degree-based model: if task degree is greater than zero
+            (task.studentTaskDegree && Number(task.studentTaskDegree) > 0) || 
+            (task.degreeValue && Number(task.degreeValue) > 0) ||
+            // Status-based model: if task status is 'Completed'
+            task.Status === 'Completed' || 
+            task.status === 'Completed' ||
+            // Completion model: if completed property is true
+            task.completed === true ||
+            task.Completed === true ||
+            // Progress model: if progress percentage is 100%
+            task.progress === 100 ||
+            task.Progress === 100
+        );
+    }).length;
+    
+    return (completedTasks / totalTasks) * 100;
+}
+
+// Helper function to calculate average score
+function calculateAverageScore(student: any): number {
+    // Try to find task data in various possible properties
+    const tasks = student?.BasicTotal || student?.Tasks || student?.tasks || [];
+    if (!student || !Array.isArray(tasks) || tasks.length === 0) {
+        return 0;
+    }
+    
+    // Filter out invalid tasks
+    const validTasks = tasks.filter((task: any) => task !== null && task !== undefined);
+    const totalTasks = validTasks.length;
+    if (totalTasks === 0) return 0;
+    
+    // Calculate total obtained score and maximum possible score
+    let obtainedScore = 0;
+    let maxScore = 0;
+    
+    validTasks.forEach((task: any) => {
+        // Handle all possible scoring systems
+        if (task.studentTaskDegree !== undefined) {
+            // Using degree-based scoring (primary system)
+            obtainedScore += Number(task.studentTaskDegree) || 0;
+            maxScore += Number(task.taskDegree) || 0;
+        } else if (task.Score !== undefined || task.score !== undefined) {
+            // Using direct score values (alternative system)
+            obtainedScore += Number(task.Score || task.score) || 0;
+            // If MaxScore is available, use it, otherwise assume 100 for completed tasks
+            maxScore += Number(task.MaxScore || task.maxScore) || 
+                       ((task.Status === 'Completed' || task.status === 'Completed') ? 100 : 0);
+        } else if (task.grade !== undefined || task.Grade !== undefined) {
+            // Using grade-based system
+            obtainedScore += Number(task.grade || task.Grade) || 0;
+            maxScore += Number(task.maxGrade || task.MaxGrade) || 100; // Default max grade is 100
+        }
+    });
+    
+    return maxScore > 0 ? (obtainedScore / maxScore) * 100 : 0;
+}
+
+
+// دالة مساعدة للعثور على الطالب حسب ترتيبه في المسار كبديل لاستخدام المعرف
+const findStudentByIndex = (trackData: any[], requestedIndex: number): any => {
+    if (!trackData || !Array.isArray(trackData) || requestedIndex < 0 || requestedIndex >= trackData.length) {
+        return null;
+    }
+    return trackData[requestedIndex];
+};
+
+// دالة مساعدة للعثور على الطالب حسب اسمه (بحث جزئي)
+const findStudentByName = (trackData: any[], requestedName: string): any => {
+    if (!trackData || !Array.isArray(trackData) || !requestedName) {
+        return null;
+    }
+    
+    const normalizedName = requestedName.toLowerCase().trim();
+    
+    return trackData.find(student => {
+        if (!student || !student.Name) return false;
+        return student.Name.toLowerCase().includes(normalizedName);
+    });
+};
 
 export const getStudentDetails = async (req: Request, res: Response) => {
     try {
-        const { studentId } = req.params;
+        // For debugging: Always log the exact request path and parameters
+        console.log(`[DEBUG] Student details request path: ${req.originalUrl}`);
+        console.log(`[DEBUG] Request parameters: ${JSON.stringify(req.params)}`);
+        console.log(`[DEBUG] Request query: ${JSON.stringify(req.query)}`);
+        console.log(`[DEBUG] Request method: ${req.method}`);
         
-        if (!studentId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Student ID is required'
-            });
+        // استلام معرف/رقم الطالب من طلب المستخدم
+        const requestedId = req.params.studentId;
+        
+        console.log(`Received request for student details with ID: ${requestedId}`);
+        
+        // تحويل معرف الطالب لعدة صيغ للبحث
+        const requestedIdStr = String(requestedId).trim();
+        const requestedIdNormalized = requestedIdStr.replace(/^0+/, ''); // إزالة الأصفار البادئة
+        const requestedIdNumeric = parseInt(requestedIdStr);
+        let requestedIdPadded = requestedIdStr;
+        
+        // إذا كان المعرف رقمي، نحاول تنسيقه بإضافة أصفار للوصول إلى 4 أرقام
+        if (!isNaN(requestedIdNumeric) && requestedIdStr.length < 4) {
+            requestedIdPadded = requestedIdNumeric.toString().padStart(4, '0');
         }
         
-        const tracks = await Track.find({ 'trackData.Id': parseInt(studentId) });
+        console.log('Looking for student with any of these ID formats:');
+        console.log(`- Original: "${requestedIdStr}"`);
+        console.log(`- Normalized (no leading zeros): "${requestedIdNormalized}"`);
+        console.log(`- As number: ${requestedIdNumeric}`);
+        console.log(`- Padded to 4 digits: "${requestedIdPadded}"`);
+        console.log('--------------- OR ---------------');
+        console.log('Using index-based approach as a fallback since IDs are undefined in DB');
         
-        if (!tracks || tracks.length === 0) {
+        // البحث بناءً على الرقم التسلسلي للطالب في المسار (بديل عن المعرف)
+        const indexToFind = parseInt(requestedIdStr) - 1; // تحويل المعرف إلى index (مع الأخذ في الاعتبار أن الرقم يبدأ من 1 وليس 0)
+        console.log(`Looking for student at index: ${indexToFind}`);
+        
+        // الحصول على جميع المسارات لكي نبحث فيها عن الطالب المطلوب
+        const tracks = await Track.find({});
+        console.log(`Total tracks in database: ${tracks.length}`);
+        
+        // إنشاء مصفوفة لتخزين المسارات التي تحتوي على الطالب المطلوب
+        const tracksWithStudent: { track: any; studentData: any }[] = [];
+        
+        // تكرار عبر كل مسار للبحث عن الطالب
+        for (const track of tracks) {
+            if (!track.trackData || !Array.isArray(track.trackData)) continue;
+            
+            // طباعة معلومات الطلاب في هذا المسار للتشخيص
+            console.log(`\n----- All Student IDs in track ${track.trackName} -----`);
+            track.trackData.forEach((student: any, index: number) => {
+                if (student) {
+                    console.log(`  ${index + 1}. Name: ${student.Name || 'Unknown'}, ID: ${student.Id === undefined ? 'undefined' : student.Id}`);
+                }
+            });
+            
+            let studentInTrack = null;
+            
+            // 1. أولًا: البحث حسب الموقع التسلسلي (إذا كان رقمًا صالحًا)
+            if (!isNaN(indexToFind) && indexToFind >= 0 && indexToFind < track.trackData.length) {
+                studentInTrack = track.trackData[indexToFind];
+                console.log(`Found student by index ${indexToFind}: ${studentInTrack.Name || 'Unknown'}`);
+            }
+            
+            // 2. ثانيًا: إذا لم نجد بالموقع، نبحث عن طريق الاسم (في حالة أن المعرف هو في الواقع اسم أو جزء من اسم)
+            if (!studentInTrack && requestedIdStr.length > 1 && isNaN(requestedIdNumeric)) {
+                studentInTrack = findStudentByName(track.trackData, requestedIdStr);
+                if (studentInTrack) {
+                    console.log(`Found student by name matching '${requestedIdStr}': ${studentInTrack.Name}`);
+                }
+            }
+            
+            // 3. أخيرًا: نبحث بكل طرق المطابقة القديمة للتوافق الخلفي
+            if (!studentInTrack) {
+                studentInTrack = track.trackData.find(student => {
+                    if (!student) return false;
+                    
+                    // المطابقة البديلة: إذا كان المعرف رقميًا، نبحث عن الطالب بالترتيب الرقمي
+                    if (!isNaN(requestedIdNumeric) && requestedIdNumeric > 0 && requestedIdNumeric <= track.trackData.length) {
+                        const index = requestedIdNumeric - 1;
+                        return track.trackData[index] === student;
+                    }
+                    
+                    // المطابقة بالاسم إذا كانت الأحرف كافية للمقارنة
+                    if (requestedIdStr.length > 1 && student.Name) {
+                        return student.Name.toLowerCase().includes(requestedIdStr.toLowerCase());
+                    }
+                    
+                    return false;
+                });
+            }
+            
+            // إذا وجدنا الطالب في هذا المسار، أضفه إلى قائمة المسارات التي تحتوي على الطالب
+            if (studentInTrack) {
+                console.log(`\u2705 FOUND STUDENT: ${studentInTrack.Name || 'Unknown'} in track: ${track.trackName}`);
+                tracksWithStudent.push({
+                    track: track,
+                    studentData: studentInTrack
+                });
+            }
+        }
+        
+        console.log(`Found student in ${tracksWithStudent.length} tracks`);
+        
+        if (tracksWithStudent.length === 0) {
+            console.log(`No tracks found for student ID: ${requestedId}`);
             return res.status(404).json({
                 success: false,
-                message: 'Student not found'
+                message: `Student with ID ${requestedId} not found in any track`
             });
         }
         
-        const studentDetails: any = {
-            studentInfo: null,
-            tracks: []
+        // استخراج معلومات الطالب الأساسية من أول مسار
+        const firstTrackWithStudent = tracksWithStudent[0];
+        const studentBaseInfo = firstTrackWithStudent.studentData;
+        
+        if (!studentBaseInfo) {
+            console.log(`Warning: Found tracks but couldn't extract student info`);
+            return res.status(500).json({
+                success: false,
+                message: `The student was found but their personal information could not be retrieved`,
+                details: 'There is a problem with the data structure. Please contact the system administrator.'
+            });
+        }
+        
+        // إنشاء كائن لتخزين تفاصيل الطالب الكاملة مع تحديد نوع البيانات
+        const studentDetails: StudentDetails = {
+            studentInfo: {
+                id: studentBaseInfo.Id || requestedId,
+                name: studentBaseInfo.Name || 'Unknown Student',
+                email: studentBaseInfo.Email || '',
+                phone: studentBaseInfo.Phone || '',
+                joinDate: studentBaseInfo.JoinDate || ''
+            },
+            tracks: [], // سيتم ملؤها لاحقاً
+            overallProgress: 0,
+            averageScore: 0,
+            completedTasks: 0,
+            totalTasks: 0
         };
         
-        tracks.forEach(track => {
-            if (!track.trackData || !Array.isArray(track.trackData)) {
-                return;
-            }
+        // معالجة بيانات كل مسار وحساب الإحصائيات
+        let totalProgress = 0;
+        let totalScore = 0;
+        let totalTaskCount = 0;
+        let completedTaskCount = 0;
+        
+        // إضافة بيانات كل مسار إلى تفاصيل الطالب
+        for (const trackWithStudent of tracksWithStudent) {
+            const track = trackWithStudent.track;
+            const studentInTrack = trackWithStudent.studentData;
             
-            const studentInTrack = track.trackData.find(
-                (student: any) => student.Id === parseInt(studentId)
-            );
+            // حساب تقدم الطالب في المسار
+            const progress = calculateStudentProgress(studentInTrack);
             
-            if (!studentInTrack) {
-                return;
-            }
+            // حساب متوسط الدرجات
+            const averageScore = calculateAverageScore(studentInTrack);
             
-            if (!studentDetails.studentInfo) {
-                studentDetails.studentInfo = {
-                    id: studentInTrack.Id,
-                    name: studentInTrack.Name,
-                };
-            }
+            // استخراج المهام من مختلف الحقول المحتملة (يدعم جميع أنواع بنية البيانات)
+            const tasks = studentInTrack.BasicTotal || studentInTrack.Tasks || studentInTrack.tasks || [];
             
-            studentDetails.tracks.push({
+            // تنقيح وتصفية المهام غير الصالحة
+            const validTasks = tasks.filter((task: any) => task !== null && task !== undefined);
+            
+            // حساب المهام المكتملة بناءً على جميع المعايير المحتملة
+            const completedTasks = validTasks.filter((task: any) => {
+                // فحص جميع أنواع المؤشرات على اكتمال المهمة
+                return (
+                    // نموذج الدرجات: إذا كانت درجة المهمة أكبر من صفر
+                    (task.studentTaskDegree && Number(task.studentTaskDegree) > 0) || 
+                    (task.degreeValue && Number(task.degreeValue) > 0) ||
+                    // نموذج الحالة: إذا كانت حالة المهمة 'مكتملة'
+                    task.Status === 'Completed' || 
+                    task.status === 'Completed' ||
+                    // نموذج الإكمال: إذا كانت خاصية completed تساوي true
+                    task.completed === true ||
+                    task.Completed === true ||
+                    // نموذج التقدم: إذا كانت نسبة التقدم 100%
+                    task.progress === 100 ||
+                    task.Progress === 100
+                );
+            }).length;
+            
+            // إضافة الإحصائيات الكلية
+            totalProgress += progress;
+            totalScore += averageScore;
+            totalTaskCount += tasks.length;
+            completedTaskCount += completedTasks;
+            
+            // إنشاء كائن لبيانات المسار مع إحصائيات الطالب فيه
+            const trackData: StudentTrackData = {
                 trackId: track._id,
                 trackName: track.trackName,
                 trackStartDate: track.trackStartDate,
                 trackEndDate: track.trackEndDate, 
                 trackStatus: track.trackStatus,
                 studentData: {
-                    status: studentInTrack.studentStatus,
-                    degrees: studentInTrack.Degrees,
-                    additional: studentInTrack.Additional,
-                    totalDegrees: studentInTrack.TotalDegrees,
-                    comments: studentInTrack.Comments,
-                    tasks: studentInTrack.BasicTotal || []
+                    progress: progress,
+                    averageScore: averageScore,
+                    totalTasks: tasks.length,
+                    completedTasks: completedTasks,
+                    tasks: validTasks,
+                    comments: studentInTrack.Comments || studentInTrack.comments || []
                 }
-            });
-        });
+            };
+            
+            studentDetails.tracks.push(trackData);
+        }
         
+        // حساب المتوسطات الكلية
+        if (tracksWithStudent.length > 0) {
+            studentDetails.overallProgress = totalProgress / tracksWithStudent.length;
+            studentDetails.averageScore = totalScore / tracksWithStudent.length;
+            studentDetails.totalTasks = totalTaskCount;
+            studentDetails.completedTasks = completedTaskCount;
+        }
+        
+        console.log(`Sending student details for ID ${requestedId} with ${studentDetails.tracks.length} tracks`);
+        console.log(`Overall progress: ${studentDetails.overallProgress.toFixed(2)}%`);
+        console.log(`Average score: ${studentDetails.averageScore.toFixed(2)}`);
+        console.log(`Tasks: ${studentDetails.completedTasks}/${studentDetails.totalTasks}`);
+        
+        // إرجاع النتائج مع البيانات الملخصة
         return res.status(200).json({
             success: true,
-            studentDetails
+            data: studentDetails
         });
-    } catch (error) {
-        console.error('Error getting student details:', error);
+    } catch (error: unknown) {
+        console.error('Error in getStudentDetails:', error);
         return res.status(500).json({
             success: false,
-            message: 'Could not retrieve student details. Please try again later.'
+            message: 'Internal server error while retrieving student details',
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 };
+

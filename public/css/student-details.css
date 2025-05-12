@@ -1,0 +1,575 @@
+/* Student Details Modal Styles */
+/* Improved Student Modal Styles */
+#studentModal .modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    overflow: visible;
+}
+
+#studentModal .modal-header {
+    background: linear-gradient(135deg, #4a6cf7, #2c3e9f);
+    color: white;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    padding: 20px 30px;
+}
+
+#studentModal .modal-title {
+    font-weight: 600;
+    font-size: 24px;
+}
+
+/* Fix for the modal body to ensure all content is visible */
+#studentModal .modal-body {
+    padding: 30px;
+    max-height: 75vh; /* Increased from 70vh */
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Improved Student header section styling */
+.student-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, #4a6cf7, #6a3de8);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(74, 108, 247, 0.15);
+    color: white;
+}
+
+.student-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin-right: 25px;
+    border: 4px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.student-avatar:hover {
+    transform: scale(1.05);
+}
+
+.student-info-main h2 {
+    margin: 0 0 8px 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+}
+
+.student-id {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 4px 12px;
+    display: inline-flex;
+    margin-top: 5px;
+}
+
+.student-id span {
+    margin-left: 5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Improved student stats styling */
+.student-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin: 25px 0 30px 0;
+    padding: 20px;
+    background: linear-gradient(to right, #f9f9ff, #f0f3ff);
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #4a6cf7;
+    margin-bottom: 8px;
+    position: relative;
+    display: inline-block;
+}
+
+.stat-value::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(to right, #4a6cf7, #6a3de8);
+    border-radius: 3px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+}
+
+/* Track badges for displaying enrolled tracks */
+.track-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.track-badge {
+    background-color: #4a6cf7;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 3px 6px rgba(74, 108, 247, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.track-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(74, 108, 247, 0.3);
+}
+
+/* Activity cards styling */
+.activity-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.activity-card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+}
+
+.activity-card:hover {
+    transform: translateY(-3px);
+}
+
+.activity-card i {
+    font-size: 24px;
+    color: #4a6cf7;
+    margin-bottom: 10px;
+}
+
+.activity-card h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.activity-card .activity-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+}
+
+/* Track card styling - improved */
+.track-card {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 25px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+}
+
+.track-card:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+}
+
+.track-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eaeaea;
+    background: linear-gradient(to right, #f8f9fe, #f0f4ff);
+}
+
+.track-info h4 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: #2c3e50;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.track-dates {
+    margin: 0;
+    font-size: 14px;
+    color: #7f8c8d;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.track-dates i {
+    margin-right: 6px;
+    color: #4a6cf7;
+}
+
+.enrollment-date {
+    margin-left: 12px;
+    padding-left: 12px;
+    border-left: 2px solid #e0e6ed;
+    font-style: italic;
+    color: #3498db;
+}
+
+.track-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    padding: 25px;
+    background-color: #fcfcff;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.track-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background-color: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+}
+
+.track-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #4a6cf7, #2c3e9f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #f0f4ff;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 10px 0;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, #4a6cf7, #6d89ff);
+    border-radius: 10px;
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 5px rgba(74, 108, 247, 0.5);
+}
+
+.score-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.score-circle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+    z-index: 1;
+}
+
+.score-circle {
+    color: white;
+}
+
+.score-excellent {
+    background-color: #10b981;
+}
+
+.score-good {
+    background-color: #3b82f6;
+}
+
+.score-average {
+    background-color: #f59e0b;
+}
+
+.score-fair {
+    background-color: #f97316;
+}
+
+.score-poor {
+    background-color: #ef4444;
+}
+
+.score-zero {
+    background-color: #9ca3af;
+}
+
+.track-comments {
+    padding: 15px;
+    border-top: 1px solid #eaeaea;
+}
+
+.track-comments h5 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.track-comments h5 i {
+    margin-right: 8px;
+    color: #4a6cf7;
+}
+
+.track-comments p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+.track-tasks {
+    padding: 15px;
+    border-top: 1px solid #eaeaea;
+}
+
+.track-tasks h5 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.track-tasks h5 i {
+    margin-right: 8px;
+    color: #4a6cf7;
+}
+
+.tasks-table {
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f3f4f6;
+    padding: 10px 15px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+}
+
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    border-top: 1px solid #eaeaea;
+    transition: background-color 0.2s ease;
+}
+
+.task-item:hover {
+    background-color: #f9fafb;
+}
+
+.task-item.completed {
+    background-color: #f0f9ff;
+}
+
+.task-name {
+    font-size: 14px;
+    color: #333;
+}
+
+.task-score {
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.show-more-tasks {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #4a6cf7;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.show-more-tasks:hover {
+    background-color: #e5e7eb;
+}
+
+.empty-tasks .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    color: #9ca3af;
+}
+
+.empty-tasks .empty-state i {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.empty-tasks .empty-state p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Error state styling */
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 48px;
+    color: #ef4444;
+    margin-bottom: 15px;
+}
+
+.error-state h4 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.error-state p {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.error-details {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #ef4444;
+    font-family: monospace;
+    background-color: #fef2f2;
+    padding: 8px 12px;
+    border-radius: 4px;
+    max-width: 100%;
+    overflow-wrap: break-word;
+}
+
+/* Tab content styling */
+.tab-content {
+    padding: 20px 0;
+}
+
+.tab-pane {
+    display: none;
+    padding: 20px;
+}
+
+.tab-pane.active {
+    display: block !important;
+    animation: fadeIn 0.3s ease;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .track-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .track-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .track-card-header .status-badge {
+        margin-top: 10px;
+    }
+}

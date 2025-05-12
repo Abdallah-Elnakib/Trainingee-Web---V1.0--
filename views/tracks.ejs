@@ -240,7 +240,7 @@
                                                 <a href="javascript:void(0)" class="action-icon edit-icon" data-track-id="<%= track._id.toString() %>" onclick="openEditTrackModal('<%= track._id.toString() %>')" title="Edit track">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <a href="javascript:void(0)" class="action-icon delete-icon" data-track-id="<%= track._id ? track._id : '' %>" onclick="deleteTrack(this);">
+                                                <a href="#" class="action-icon delete-icon" data-track-id="<%= track._id ? track._id.toString() : '' %>" onclick="deleteTrack(this); return false;">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </a>
                                             </td>
