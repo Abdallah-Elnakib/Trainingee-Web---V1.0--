@@ -1,0 +1,139 @@
+/* Estilos para la sección de preguntas individuales */
+.questions-container {
+    margin-top: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.questions-header {
+    background-color: rgba(0, 123, 255, 0.1);
+    padding: 10px 15px;
+    border-radius: 6px;
+}
+
+.questions-toggle {
+    cursor: pointer;
+    color: #007bff;
+    font-weight: 500;
+}
+
+.questions-toggle:hover {
+    color: #0056b3;
+}
+
+.task-overall-status {
+    font-weight: 500;
+}
+
+.questions-content {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 0 0 6px 6px;
+    margin-top: 5px;
+}
+
+.questions-wrapper {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.question-card {
+    margin-bottom: 15px;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.question-card .card-header {
+    background-color: rgba(0, 123, 255, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.question-text {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.question-status.text-success {
+    color: #28a745 !important;
+}
+
+.question-status.text-warning {
+    color: #ffc107 !important;
+}
+
+.question-status.text-info {
+    color: #17a2b8 !important;
+}
+
+.question-status.text-danger {
+    color: #dc3545 !important;
+}
+
+.answer-section {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+.answer-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.question-answer {
+    border: 1px solid #ced4da;
+    resize: vertical;
+}
+
+.submit-question-answer {
+    min-width: 120px;
+}
+
+.submit-all-answers {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.ai-feedback .card {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.ai-feedback .card-header {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    padding: 8px 12px;
+}
+
+.feedback-content {
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.feedback-score {
+    font-weight: 500;
+}
+
+.feedback-score.text-success {
+    color: #28a745 !important;
+}
+
+.feedback-score.text-warning {
+    color: #ffc107 !important;
+}
+
+.feedback-score.text-danger {
+    color: #dc3545 !important;
+}
+
+/* Badge styles */
+.badge {
+    padding: 0.35em 0.65em;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.badge i {
+    margin-right: 4px;
+}

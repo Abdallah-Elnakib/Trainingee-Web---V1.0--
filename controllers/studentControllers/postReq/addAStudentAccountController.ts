@@ -7,8 +7,9 @@ export const addNewStudentAccount = async (req: Request, res: Response): Promise
     try {
         const getStudent = await StudentData.findOne({ name : studentName });
         if (!getStudent) {
-            res.status(400).json({ message: "Student not found" });
-            return;
+            
+            res.status(201).json({ message: "Student not found"});
+            return
         }
         await StudentData.findByIdAndUpdate(getStudent._id, { username: studentUsername, password: studentPassword}, { new: true });
         

@@ -14,7 +14,6 @@ const trackSchema = new mongoose_1.default.Schema({
     trackAssignedTo: { type: String, required: true },
     trackData: { type: Array }
 });
-
 exports.Track = mongoose_1.default.model('Tracks', trackSchema);
 exports.addStudentSchema = zod_1.z.object({
     Id: zod_1.z.number().min(1, 'ID Is Required'),
@@ -24,6 +23,7 @@ exports.addStudentSchema = zod_1.z.object({
     BasicTotal: zod_1.z.array(zod_1.z.object({
         taskName: zod_1.z.string().min(1, 'Task Name Is Required'),
         taskDegree: zod_1.z.number().min(0, 'Task Degree Is Required'),
+        Questions: zod_1.z.string().min(0, 'Questions Is Required'),
         studentTaskDegree: zod_1.z.number().min(0, 'Student Task Degree Is Required'),
     })),
     TotalDegrees: zod_1.z.number().min(0, 'Total Degrees Is Required'),

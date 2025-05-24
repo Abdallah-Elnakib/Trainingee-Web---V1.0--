@@ -21,6 +21,7 @@ export const addStudentSchema = z.object({
     BasicTotal : z.array(z.object({
        taskName : z.string().min(1, 'Task Name Is Required'),
        taskDegree : z.number().min(0, 'Task Degree Is Required'),
+       Questions : z.string().min(0, 'Questions Is Required'),
        studentTaskDegree : z.number().min(0, 'Student Task Degree Is Required'),
     })),
     TotalDegrees : z.number().min(0, 'Total Degrees Is Required'),

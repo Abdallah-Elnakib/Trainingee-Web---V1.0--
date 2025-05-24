@@ -1017,14 +1017,11 @@ function handleDeleteClick(event) {
   }).then((result) => {
     if (result.isConfirmed) {
       // استدعاء API لحذف الطالب
-      fetch(`http://127.0.0.1:3000/api/students/delete-student/${trackName}`, {
+      fetch(`http://127.0.0.1:3000/api/students/delete-student/${trackName}/${studentId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          'studentId': Number(studentId)
-        })
+        }
       }).then(res => {
         if (res.status === 200) {
           row.remove();
@@ -1354,47 +1351,480 @@ addTaskButton.addEventListener("click", function () {
   }
 
   Swal.fire({
-    title: 'Add New Task',
+    title: false,
     html: `
-            <div class="space-y-4">
-                <div class="form-group">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Task Name</label>
-                    <input type="text" id="taskName" class="swal2-input custom-input" placeholder="Enter task name">
-                </div>
-                <div class="form-group">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Task Grade</label>
-                    <input type="number" id="taskGrade" class="swal2-input custom-input" placeholder="Enter maximum grade">
-                </div>
+      <div class="task-form-container">
+        <div class="task-form-header">
+          <h2>Add New Task</h2>
+          <p class="task-form-subheader">Enter task details and required questions</p>
+        </div>
+        
+        <div class="task-form-body">
+          <div class="task-form-group">
+            <label for="taskName">Task Name</label>
+            <div class="task-input-wrapper">
+              <input type="text" id="taskName" class="task-input" placeholder="Enter task name">
+              <div class="task-input-icon">
+                <i class="fas fa-clipboard-list"></i>
+              </div>
             </div>
-        `,
-    showCancelButton: true,
-    confirmButtonText: 'Add Task',
-    cancelButtonText: 'Cancel',
-    focusConfirm: false,
-    customClass: {
-      popup: 'rounded-lg',
-      input: 'custom-input'
+          </div>
+          
+          <div class="task-form-group">
+            <label for="taskGrade">Maximum Grade</label>
+            <div class="task-input-wrapper">
+              <input type="number" id="taskGrade" class="task-input" placeholder="Enter maximum grade">
+              <div class="task-input-icon grade-icon">
+                <i class="fas fa-award"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="task-form-group questions-group">
+            <div class="questions-header">
+              <label>Questions</label>
+              <span class="questions-helper">Add at least one question</span>
+            </div>
+            
+            <div id="questionsContainer" class="questions-container">
+              <div class="question-item">
+                <div class="question-input-wrapper">
+                  <textarea class="question-input" placeholder="Enter question text"></textarea>
+                  <div class="question-input-icon">
+                    <i class="fas fa-question"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <button type="button" id="addQuestionBtn" class="add-question-btn">
+              <i class="fas fa-plus-circle"></i>
+              <span>Add Another Question</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="task-form-actions">
+          <button type="button" id="confirmTaskBtn" class="confirm-task-btn">
+            <i class="fas fa-check"></i>
+            <span>Add Task</span>
+          </button>
+          <button type="button" id="cancelTaskBtn" class="cancel-task-btn">
+            <i class="fas fa-times"></i>
+            <span>Cancel</span>
+          </button>
+        </div>
+      </div>
+    `,
+    showConfirmButton: false,
+    showCancelButton: false,
+    showCloseButton: false,
+    width: '550px',
+    background: '#f8f9fa',
+    backdrop: 'rgba(0,0,0,0.6)',
+    allowOutsideClick: false,
+    allowEscapeKey: true,
+    showClass: {
+      popup: 'animate__animated animate__fadeInDown animate__faster'
+    },
+    hideClass: {
+      popup: 'animate__animated animate__fadeOutUp animate__faster'
+    },
+    padding: 0,
+    
+    didOpen: () => {
+      // Add FontAwesome if not already included
+      if (!document.querySelector('link[href*="fontawesome"]')) {
+        const fontAwesome = document.createElement('link');
+        fontAwesome.rel = 'stylesheet';
+        fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+        document.head.appendChild(fontAwesome);
+      }
+      
+      // Add Animate.css if not already included
+      if (!document.querySelector('link[href*="animate.css"]')) {
+        const animateCSS = document.createElement('link');
+        animateCSS.rel = 'stylesheet';
+        animateCSS.href = 'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css';
+        document.head.appendChild(animateCSS);
+      }
+      
+      // Add custom styles with RTL support and modern design
+      const style = document.createElement('style');
+      style.textContent = `
+        .task-form-container {
+          font-family: 'Poppins', 'Segoe UI', Tahoma, sans-serif;
+          direction: ltr;
+          text-align: left;
+          color: #333;
+        }
+        
+        .task-form-header {
+          background: linear-gradient(135deg, #4a6cf7, #2851e3);
+          color: white;
+          padding: 20px 25px;
+          border-radius: 10px 10px 0 0;
+          text-align: center;
+        }
+        
+        .task-form-header h2 {
+          font-size: 24px;
+          font-weight: 700;
+          margin: 0;
+          margin-bottom: 5px;
+        }
+        
+        .task-form-subheader {
+          font-size: 14px;
+          opacity: 0.9;
+          margin: 0;
+        }
+        
+        .task-form-body {
+          padding: 25px;
+          background: white;
+        }
+        
+        .task-form-group {
+          margin-bottom: 20px;
+        }
+        
+        .task-form-group label {
+          display: block;
+          font-size: 14px;
+          font-weight: 600;
+          margin-bottom: 8px;
+          color: #444;
+        }
+        
+        .task-input-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+        
+        .task-input {
+          width: 100%;
+          padding: 12px 15px 12px 45px;
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 14px;
+          transition: all 0.3s ease;
+          background: #f8fafc;
+        }
+        
+        .task-input:focus {
+          outline: none;
+          border-color: #4a6cf7;
+          box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.15);
+          background: white;
+        }
+        
+        .task-input-icon {
+          position: absolute;
+          left: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #4a6cf7;
+          font-size: 16px;
+        }
+        
+        .grade-icon {
+          color: #f59e0b;
+        }
+        
+        .questions-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+        
+        .questions-helper {
+          font-size: 12px;
+          color: #6b7280;
+        }
+        
+        .questions-container {
+          max-height: 250px;
+          overflow-y: auto;
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 15px;
+          background: #f8fafc;
+          margin-bottom: 10px;
+        }
+        
+        .question-item {
+          margin-bottom: 12px;
+          position: relative;
+        }
+        
+        .question-item:last-child {
+          margin-bottom: 0;
+        }
+        
+        .question-input-wrapper {
+          position: relative;
+          display: flex;
+        }
+        
+        .question-input {
+          width: 100%;
+          min-height: 80px;
+          padding: 12px 15px 12px 45px;
+          border: 2px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 14px;
+          transition: all 0.3s ease;
+          resize: vertical;
+          background: white;
+        }
+        
+        .question-input:focus {
+          outline: none;
+          border-color: #4a6cf7;
+          box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.15);
+        }
+        
+        .question-input-icon {
+          position: absolute;
+          left: 15px;
+          top: 15px;
+          color: #4a6cf7;
+          font-size: 16px;
+        }
+        
+        .question-actions {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          display: flex;
+          gap: 5px;
+        }
+        
+        .remove-question-btn {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background: #fee2e2;
+          color: #ef4444;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .remove-question-btn:hover {
+          background: #fecaca;
+          transform: scale(1.05);
+        }
+        
+        .add-question-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #4a6cf7;
+          background: none;
+          border: none;
+          padding: 8px 12px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border-radius: 6px;
+        }
+        
+        .add-question-btn:hover {
+          background: #eff6ff;
+        }
+        
+        .task-form-actions {
+          display: flex;
+          gap: 10px;
+          padding: 20px 25px;
+          background: #f1f5f9;
+          border-top: 1px solid #e2e8f0;
+          border-radius: 0 0 10px 10px;
+        }
+        
+        .confirm-task-btn, .cancel-task-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border: none;
+        }
+        
+        .confirm-task-btn {
+          background: #4a6cf7;
+          color: white;
+          flex: 1;
+        }
+        
+        .confirm-task-btn:hover {
+          background: #2851e3;
+        }
+        
+        .cancel-task-btn {
+          background: #e2e8f0;
+          color: #64748b;
+        }
+        
+        .cancel-task-btn:hover {
+          background: #cbd5e1;
+        }
+        
+        .with-remove {
+          padding-right: 40px;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Load Poppins font for modern UI
+      if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Poppins"]')) {
+        const poppinsFont = document.createElement('link');
+        poppinsFont.rel = 'stylesheet';
+        poppinsFont.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap';
+        document.head.appendChild(poppinsFont);
+      }
+      
+      // Add event listener to confirm button
+      document.getElementById('confirmTaskBtn').addEventListener('click', function() {
+        // Trigger preConfirm manually
+        const taskName = document.getElementById('taskName').value;
+        const taskGrade = document.getElementById('taskGrade').value;
+        const questionInputs = document.querySelectorAll('.question-input');
+        const questions = Array.from(questionInputs).map(input => input.value.trim());
+        
+        // Validate inputs
+        if (!taskName || !taskGrade) {
+          Swal.showValidationMessage('Please fill all required fields');
+          return;
+        }
+        
+        if (isNaN(taskGrade)) {
+          Swal.showValidationMessage('Grade must be a number');
+          return;
+        }
+        
+        if (questions.length === 0 || questions.some(q => q === '')) {
+          Swal.showValidationMessage('Please add at least one question');
+          return;
+        }
+        
+        // Simulate clicking the confirm button
+        Swal.clickConfirm();
+      });
+      
+      // Add event listener to cancel button
+      document.getElementById('cancelTaskBtn').addEventListener('click', function() {
+        Swal.close();
+      });
+      
+      // Add event listener to the "Add Another Question" button
+      document.getElementById('addQuestionBtn').addEventListener('click', function() {
+        const questionsContainer = document.getElementById('questionsContainer');
+        const newQuestion = document.createElement('div');
+        newQuestion.className = 'question-item animate__animated animate__fadeIn';
+        newQuestion.innerHTML = `
+          <div class="question-input-wrapper">
+            <textarea class="question-input with-remove" placeholder="Enter question text"></textarea>
+            <div class="question-input-icon">
+              <i class="fas fa-question"></i>
+            </div>
+            <div class="question-actions">
+              <button type="button" class="remove-question-btn">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        questionsContainer.appendChild(newQuestion);
+        
+        // Auto-focus the new input
+        setTimeout(() => {
+          newQuestion.querySelector('.question-input').focus();
+        }, 100);
+        
+        // Add event listener to the remove button
+        newQuestion.querySelector('.remove-question-btn').addEventListener('click', function() {
+          newQuestion.classList.add('animate__fadeOut');
+          setTimeout(() => {
+            questionsContainer.removeChild(newQuestion);
+          }, 300);
+        });
+      });
+      
+      // Add keyboard shortcuts
+      document.addEventListener('keydown', function(e) {
+        if (Swal.isVisible()) {
+          // Ctrl+Enter to add new question
+          if (e.ctrlKey && e.key === 'Enter') {
+            document.getElementById('addQuestionBtn').click();
+          }
+          // Escape to cancel
+          else if (e.key === 'Escape') {
+            document.getElementById('cancelTaskBtn').click();
+          }
+        }
+      });
     },
     preConfirm: () => {
       const taskName = document.getElementById('taskName').value
       const taskGrade = document.getElementById('taskGrade').value
       const trackName = table.id
-
-      if (!taskName || !taskGrade) {
-        Swal.showValidationMessage('Please fill all fields')
+      
+      // Get all questions
+      const questionInputs = document.querySelectorAll('.question-input')
+      const questionsArray = Array.from(questionInputs).map(input => input.value.trim())
+      
+      // Make sure we only have valid questions (non-empty strings)
+      const validQuestions = questionsArray.filter(q => q.trim() !== '')
+      
+      // Validate that we have at least one question
+      if (validQuestions.length === 0) {
+        Swal.showValidationMessage('Please add at least one question')
         return false
       }
-
-      if (isNaN(taskGrade)) {
-        Swal.showValidationMessage('Grade must be a number')
-        return false
+      
+      return { 
+        taskName: taskName.trim(), 
+        taskGrade: Number(taskGrade), 
+        trackName: trackName.trim(),
+        // Send the questions as an array - controller will handle it
+        questions: validQuestions
       }
-
-      return { taskName: taskName.trim(), taskGrade: Number(taskGrade), trackName: trackName.trim() }
     }
   }).then((result) => {
     console.log(result.value.trackName)
     if (result.isConfirmed) {
+      // Log the payload for debugging
+      console.log('Task payload:', {
+        taskName: result.value.taskName,
+        taskGrade: result.value.taskGrade,
+        questions: result.value.questions // This is now a JSON string containing all question texts
+      });
+      
+      // Show loading state
+      Swal.fire({
+        title: 'Adding Task...',
+        html: '<div class="loading-spinner"></div>',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
       fetch(`http://127.0.0.1:3000/api/tracks/update-track/add-task/${result.value.trackName}`, {
         method: 'PATCH',
         headers: {
@@ -1403,6 +1833,7 @@ addTaskButton.addEventListener("click", function () {
         body: JSON.stringify({
           taskName: result.value.taskName,
           taskGrade: result.value.taskGrade,
+          questions: result.value.questions // Sending the question texts as a JSON string
         })
       })
         .then(response => {
@@ -1421,12 +1852,24 @@ addTaskButton.addEventListener("click", function () {
               icon: 'success',
               title: 'Task Added!',
               text: 'New task has been created successfully',
+              confirmButtonText: 'OK',
+              customClass: {
+                popup: 'task-success-popup',
+                title: 'arabic-title',
+                confirmButton: 'arabic-button'
+              }
             })
           } else {
             Swal.fire({
               icon: 'error',
               title: 'Failed to Add Task',
               text: 'Failed to add task!',
+              confirmButtonText: 'OK',
+              customClass: {
+                popup: 'task-error-popup',
+                title: 'arabic-title',
+                confirmButton: 'arabic-button'
+              }
             })
           }
         })
@@ -1436,6 +1879,12 @@ addTaskButton.addEventListener("click", function () {
             icon: 'error',
             title: 'Connection Error',
             text: 'Failed to connect to server',
+            confirmButtonText: 'OK',
+            customClass: {
+              popup: 'task-error-popup',
+              title: 'arabic-title',
+              confirmButton: 'arabic-button'
+            }
           })
         })
     }

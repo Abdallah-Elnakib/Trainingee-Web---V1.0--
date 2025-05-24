@@ -11,10 +11,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteStudent = void 0;
 const tracksSchema_1 = require("../../../models/tracksSchema");
+const studentSchema_1 = require("../../../models/studentSchema");
 const deleteStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { studentId } = req.body;
         const trackName = req.params.trackName;
+        const studentId = Number(req.params.studentId);
         if (!studentId) {
             res.status(400).json({ message: 'Missing required fields' });
             return;
@@ -33,12 +34,23 @@ const deleteStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             res.status(404).json({ message: 'Student not found' });
             return;
         }
+        // Save the student name before removing from array
+        const studentName = track.trackData[studentIndex].Name;
+        console.log('Deleting student:', studentName, 'with ID:', studentId, 'from track:', trackName);
+        // Remove student from track
         track.trackData.splice(studentIndex, 1);
         track.markModified('trackData');
         yield track.save();
+        // Now remove track from student's list of tracks
+        const deletedTrack = yield studentSchema_1.StudentData.findOneAndUpdate({ name: studentName }, { $pull: { tracks: trackName } });
+        if (!deletedTrack) {
+            res.status(404).json({ message: 'Track not found' });
+            return;
+        }
         res.status(200).json({
             message: 'Student deleted successfully',
             updatedTrack: track,
+            deletedTrack
         });
     }
     catch (error) {

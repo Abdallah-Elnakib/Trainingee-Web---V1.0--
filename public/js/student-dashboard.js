@@ -1,0 +1,909 @@
+document.addEventListener('DOMContentLoaded', function() {
+    // Get student data from localStorage
+    const userDataString = localStorage.getItem('userData');
+    if (!userDataString) {
+        // If no data, redirect to login page
+        window.location.href = '/api/auth/Login';
+        return;
+    }
+    
+    const userData = JSON.parse(userDataString);
+    console.log('User data:', userData);
+    
+    // Verify the user is a student
+    if (userData.role !== 'student') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Access Denied',
+            text: 'This page is for students only',
+            confirmButtonText: 'Go Back'
+        }).then(() => {
+            window.location.href = '/api/auth/Login';
+        });
+        return;
+    }
+    
+    // Display basic student information
+    document.getElementById('student-name').textContent = userData.name || 'Student Dashboard';
+    // We'll update the student ID after fetching the full data
+    document.getElementById('tracks-count').textContent = userData.tracks ? userData.tracks.length : 0;
+    
+    // Fetch student data from server
+    fetchStudentData(userData.id);
+    
+    // Setup event delegation for task submission
+    document.addEventListener('click', function(event) {
+        // Check if the clicked element is a submit answer button
+        if (event.target.classList.contains('submit-answer')) {
+            handleTaskSubmission(event);
+        }
+    });
+});
+
+async function fetchStudentData(studentId) {
+    try {
+        // Get access token from local storage
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+            throw new Error('Access token not found');
+        }
+        
+        console.log('Fetching data for student ID:', studentId);
+        
+        const response = await fetch(`/api/students/student-data/${studentId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch student data: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Student data received:', data);
+        
+        // Update student ID in the header with the track-specific ID
+        if (data.student && data.student.id) {
+            document.getElementById('student-id').textContent = data.student.id;
+        }
+        
+        renderStudentData(data);
+    } catch (error) {
+        console.error('Error fetching student data:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'An error occurred while fetching student data'
+        });
+    }
+}
+
+function renderStudentData(data) {
+    const tracksContainer = document.getElementById('tracks-container');
+    const trackTemplate = document.getElementById('track-template');
+    const taskTemplate = document.getElementById('task-template');
+    const noTracksTemplate = document.getElementById('no-tracks-template');
+    
+    // Clear container before adding new data
+    tracksContainer.innerHTML = '';
+    
+    // Display data for each student track
+    if (data.tracksData && data.tracksData.length > 0) {
+        data.tracksData.forEach(track => {
+            // Create a copy of the track template
+            const trackElement = document.importNode(trackTemplate.content, true);
+            
+            // Fill in track data
+            trackElement.querySelector('.track-name').textContent = track.trackName;
+            
+            // Set track status with appropriate color
+            const statusBadge = trackElement.querySelector('.track-status');
+            statusBadge.textContent = track.status;
+            
+            // Set status color based on status value
+            if (track.status === 'In Progress') {
+                statusBadge.classList.add('badge-warning');
+            } else if (track.status === 'Completed') {
+                statusBadge.classList.add('badge-success');
+            } else if (track.status === 'Rejected') {
+                statusBadge.classList.add('badge-danger');
+            } else if (track.status === 'Pending') {
+                statusBadge.classList.add('badge-info');
+            } else {
+                statusBadge.classList.add('badge-secondary');
+            }
+            
+            // Display grades
+            trackElement.querySelector('.track-degrees').textContent = 
+                `Score: ${track.degrees || 0} / ${track.totalDegrees || 0}`;
+            
+            // Get the task list element
+            const taskList = trackElement.querySelector('.task-list');
+            
+            // Display tasks
+            if (track.tasks && track.tasks.length > 0) {
+                track.tasks.forEach(task => {
+                    // Create a copy of the task template
+                    const taskElement = document.importNode(taskTemplate.content, true);
+                    
+                    // Fill in task data
+                    taskElement.querySelector('.task-name').textContent = task.taskName;
+                    
+                    // Display task grades
+                    taskElement.querySelector('.task-grade').textContent = 
+                        `${task.studentTaskDegree || 0} / ${task.taskDegree || 0}`;
+                    
+                    taskElement.querySelector('.task-degree-info').textContent = 
+                        `Task Grade`;
+                    
+                    // Handle questions if present
+                    let questions = [];
+                    try {
+                        if (task.Questions) {
+                            questions = JSON.parse(task.Questions);
+                        }
+                    } catch (error) {
+                        console.error('Error parsing questions:', error);
+                    }
+                    
+                    // Display questions if present
+                    const questionsContainer = taskElement.querySelector('.questions-container');
+                    const questionsToggle = taskElement.querySelector('.questions-toggle');
+                    const toggleText = questionsToggle.querySelector('.toggle-text');
+                    const questionsContent = questionsContainer.querySelector('.questions-content');
+                    
+                    if (questions && questions.length > 0) {
+                        displayTaskQuestions(task, questionsContainer);
+                        
+                        // Add event listener to show/hide questions button
+                        questionsToggle.addEventListener('click', function() {
+                            if (questionsContent.style.display === 'none') {
+                                questionsContent.style.display = 'block';
+                                toggleText.textContent = 'Hide Questions';
+                            } else {
+                                questionsContent.style.display = 'none';
+                                toggleText.textContent = 'Show Questions';
+                            }
+                        });
+                    } else {
+                        // No questions available
+                        questionsToggle.innerHTML = '<i class="fas fa-info-circle"></i> No Questions Available';
+                        questionsToggle.style.cursor = 'default';
+                    }
+                    
+                    // Setup task submission UI
+                    setupTaskSubmission(taskElement, task);
+                    
+                    // Add task to the task list
+                    taskList.appendChild(taskElement);
+                });
+            } else {
+                // If no tasks
+                const noTasksElement = document.createElement('li');
+                noTasksElement.classList.add('task-item', 'text-center', 'text-muted');
+                noTasksElement.textContent = 'No tasks available for this track';
+                taskList.appendChild(noTasksElement);
+            }
+            
+            // Add track element to the container
+            tracksContainer.appendChild(trackElement);
+        });
+    } else {
+        // If no tracks, use the no-tracks template
+        const noTracksElement = document.importNode(noTracksTemplate.content, true);
+        tracksContainer.appendChild(noTracksElement);
+    }
+}
+
+/**
+ * Display task questions with individual answer fields for each question
+ */
+function displayTaskQuestions(task, questionsContainer) {
+    // Get the questions content area
+    const questionsContent = questionsContainer.querySelector('.questions-content');
+    questionsContent.innerHTML = '';
+    
+    // Get task questions
+    let questions = [];
+    try {
+        if (task.Questions) {
+            questions = JSON.parse(task.Questions);
+        }
+    } catch (error) {
+        console.error('Error parsing questions:', error);
+    }
+    
+    if (questions.length === 0) {
+        questionsContent.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle mr-2"></i> No Questions Available</div>';
+        return;
+    }
+    
+    // Calculate points per question
+    const totalPoints = task.taskDegree || 100;
+    const pointsPerQuestion = Math.floor(totalPoints / questions.length);
+    
+    // Create a container for all questions
+    const questionsWrapper = document.createElement('div');
+    questionsWrapper.className = 'questions-wrapper';
+    
+    // Add each question with its own answer field
+    questions.forEach((question, index) => {
+        const questionText = question.text || question;
+        const questionId = `question-${task._id || 'task'}-${index}`;
+        
+        // Create question card
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-card card mb-3';
+        questionCard.dataset.questionIndex = index;
+        
+        // Check if this question has been answered
+        const questionAnswer = task.answers && task.answers[index] ? task.answers[index].answer : '';
+        const questionFeedback = task.answers && task.answers[index] ? task.answers[index].feedback : '';
+        const questionScore = task.answers && task.answers[index] ? task.answers[index].score : 0;
+        const isAnswered = task.answers && task.answers[index] && task.answers[index].submitted;
+        
+        // Build the question card content
+        questionCard.innerHTML = `
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Question ${index + 1} <small>(${pointsPerQuestion} points)</small></h6>
+                <div class="question-status ${isAnswered ? 'text-success' : 'text-warning'}">
+                    ${isAnswered ? `<i class="fas fa-check-circle"></i> Submitted - Score: ${questionScore}/${pointsPerQuestion}` : '<i class="fas fa-clock"></i> Not submitted'}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="question-text mb-3">${questionText}</div>
+                <div class="answer-section">
+                    <div class="form-group">
+                        <label for="${questionId}" class="answer-label">Your Answer:</label>
+                        <textarea class="form-control question-answer" id="${questionId}" rows="3" placeholder="Type your answer here..." ${isAnswered ? 'disabled' : ''}>${questionAnswer}</textarea>
+                    </div>
+                    <button class="btn btn-primary btn-sm submit-question-answer" data-question-index="${index}" ${isAnswered ? 'disabled' : ''}>
+                        ${isAnswered ? 'Submitted' : 'Submit Answer'}
+                    </button>
+                </div>
+                ${isAnswered ? `
+                <div class="ai-feedback mt-3">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">AI Feedback</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="feedback-content">${questionFeedback}</div>
+                            <div class="feedback-score mt-2 font-weight-bold ${questionScore >= pointsPerQuestion * 0.7 ? 'text-success' : questionScore >= pointsPerQuestion * 0.4 ? 'text-warning' : 'text-danger'}">
+                                ${questionScore >= pointsPerQuestion * 0.7 ? 'Great job! ' : questionScore >= pointsPerQuestion * 0.4 ? 'Good effort! ' : 'You can do better! '}
+                                ${questionScore}/${pointsPerQuestion} points awarded.
+                            </div>
+                        </div>
+                    </div>
+                </div>` : ''}
+            </div>
+        `;
+        
+        // Add event listener to the submit button for this question
+        const submitButton = questionCard.querySelector('.submit-question-answer');
+        submitButton.addEventListener('click', function() {
+            handleQuestionSubmission(task, index, this);
+        });
+        
+        // Add to questions wrapper
+        questionsWrapper.appendChild(questionCard);
+    });
+    
+    // Add questions wrapper to content
+    questionsContent.appendChild(questionsWrapper);
+    
+    // Add event listener to submit all answers button if present
+    const submitAllButton = questionsContainer.querySelector('.submit-all-answers');
+    if (submitAllButton) {
+        submitAllButton.addEventListener('click', function() {
+            handleAllQuestionsSubmission(task, questionsContainer);
+        });
+    }
+    
+    // Update overall task status
+    updateTaskOverallStatus(task, questionsContainer);
+}
+
+/**
+ * Update the overall status of a task based on question submissions
+ */
+function updateTaskOverallStatus(task, questionsContainer) {
+    const statusElement = questionsContainer.querySelector('.task-overall-status');
+    if (!statusElement) return;
+    
+    // Get task questions
+    let questions = [];
+    try {
+        if (task.Questions) {
+            questions = JSON.parse(task.Questions);
+        }
+    } catch (error) {
+        console.error('Error parsing questions:', error);
+    }
+    
+    if (questions.length === 0) {
+        statusElement.innerHTML = '';
+        return;
+    }
+    
+    // Count answered questions
+    let answeredCount = 0;
+    let totalScore = 0;
+    const totalPoints = task.taskDegree || 100;
+    const pointsPerQuestion = Math.floor(totalPoints / questions.length);
+    
+    if (task.answers && Array.isArray(task.answers)) {
+        task.answers.forEach(answer => {
+            if (answer && answer.submitted) {
+                answeredCount++;
+                totalScore += answer.score || 0;
+            }
+        });
+    }
+    
+    // Show task completion status
+    if (answeredCount === 0) {
+        statusElement.innerHTML = '<span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i> No questions answered</span>';
+    } else if (answeredCount < questions.length) {
+        statusElement.innerHTML = `<span class="badge badge-info"><i class="fas fa-spinner"></i> ${answeredCount}/${questions.length} questions answered</span>`;
+    } else {
+        // All questions answered
+        const percentage = (totalScore / totalPoints) * 100;
+        if (percentage >= 70) {
+            statusElement.innerHTML = `<span class="badge badge-success"><i class="fas fa-check-circle"></i> Completed with ${totalScore}/${totalPoints} points</span>`;
+        } else if (percentage >= 40) {
+            statusElement.innerHTML = `<span class="badge badge-primary"><i class="fas fa-check"></i> Completed with ${totalScore}/${totalPoints} points</span>`;
+        } else {
+            statusElement.innerHTML = `<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Completed with ${totalScore}/${totalPoints} points</span>`;
+        }
+    }
+}
+
+/**
+ * Handle submission of a single question answer
+ */
+async function handleQuestionSubmission(task, questionIndex, submitButton) {
+    // Get the question card and answer
+    const questionCard = submitButton.closest('.question-card');
+    const answerInput = questionCard.querySelector('.question-answer');
+    const answer = answerInput.value.trim();
+    const questionStatus = questionCard.querySelector('.question-status');
+    
+    // Get user data
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    if (!userData) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Session Expired',
+            text: 'Please login again to continue.',
+            confirmButtonText: 'Login'
+        }).then(() => {
+            window.location.href = '/api/auth/Login';
+        });
+        return;
+    }
+    
+    // Validate answer
+    if (!answer) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Empty Answer',
+            text: 'Please enter your answer before submitting.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    try {
+        // Get the track name from the track card
+        const taskItem = questionCard.closest('.task-item');
+        const trackCard = taskItem.closest('.track-card');
+        const trackName = trackCard.querySelector('.track-name').textContent;
+        const taskName = taskItem.querySelector('.task-name').textContent;
+        
+        // Get access token from local storage
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+            throw new Error('Access token not found');
+        }
+        
+        // Disable submit button and show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Submitting...';
+        questionStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating...';
+        questionStatus.className = 'question-status text-info';
+        
+        // Get task questions
+        let questions = [];
+        try {
+            if (task.Questions) {
+                questions = JSON.parse(task.Questions);
+            }
+        } catch (error) {
+            console.error('Error parsing questions:', error);
+        }
+        
+        // Calculate points per question
+        const totalPoints = task.taskDegree || 100;
+        const pointsPerQuestion = Math.floor(totalPoints / questions.length);
+        
+        // Submit answer to server
+        const response = await fetch('/api/students/submit-question-answer', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                trackName,
+                studentId: userData.id,
+                taskName,
+                questionIndex,
+                answer,
+                question: questions[questionIndex],
+                maxScore: pointsPerQuestion
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.status === 200) {
+            // Update UI with feedback and score
+            questionStatus.innerHTML = `<i class="fas fa-check-circle"></i> Submitted - Score: ${data.score}/${pointsPerQuestion}`;
+            questionStatus.className = 'question-status text-success';
+            
+            // Disable input and button
+            answerInput.disabled = true;
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Submitted';
+            
+            // Show AI feedback
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = 'ai-feedback mt-3';
+            feedbackDiv.innerHTML = `
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">AI Feedback</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="feedback-content">${data.feedback}</div>
+                        <div class="feedback-score mt-2 font-weight-bold ${data.score >= pointsPerQuestion * 0.7 ? 'text-success' : data.score >= pointsPerQuestion * 0.4 ? 'text-warning' : 'text-danger'}">
+                            ${data.score >= pointsPerQuestion * 0.7 ? 'Great job! ' : data.score >= pointsPerQuestion * 0.4 ? 'Good effort! ' : 'You can do better! '}
+                            ${data.score}/${pointsPerQuestion} points awarded.
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add feedback to the question card
+            const answerSection = questionCard.querySelector('.answer-section');
+            answerSection.after(feedbackDiv);
+            
+            // Update the task's total score in the UI
+            const taskGradeElement = taskItem.querySelector('.task-grade');
+            if (taskGradeElement) {
+                // Calculate new total score
+                let totalScore = 0;
+                if (task.answers && Array.isArray(task.answers)) {
+                    task.answers.forEach(answer => {
+                        if (answer && answer.submitted) {
+                            totalScore += answer.score || 0;
+                        }
+                    });
+                }
+                
+                // Add this question's score
+                if (!task.answers || !task.answers[questionIndex]) {
+                    totalScore += data.score;
+                }
+                
+                taskGradeElement.textContent = `${totalScore} / ${totalPoints}`;
+            }
+            
+            // Update task answers in memory
+            if (!task.answers) task.answers = [];
+            task.answers[questionIndex] = {
+                answer: answer,
+                feedback: data.feedback,
+                score: data.score,
+                submitted: true
+            };
+            
+            // Update overall task status
+            const questionsContainer = questionCard.closest('.questions-container');
+            updateTaskOverallStatus(task, questionsContainer);
+            
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Answer Submitted',
+                text: `Your answer has been evaluated. Score: ${data.score}/${pointsPerQuestion}`,
+                confirmButtonText: 'OK'
+            });
+            
+        } else {
+            // Handle error
+            throw new Error(data.message || 'Error submitting answer');
+        }
+        
+    } catch (error) {
+        console.error('Error submitting answer:', error);
+        
+        // Reset UI
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Submit Answer';
+        questionStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Submission failed';
+        questionStatus.className = 'question-status text-danger';
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Submission Failed',
+            text: error.message || 'An error occurred while submitting your answer. Please try again.',
+            confirmButtonText: 'OK'
+        });
+    }
+}
+
+/**
+ * Handle submission of all question answers at once
+ */
+async function handleAllQuestionsSubmission(task, questionsContainer) {
+    // Get all question cards
+    const questionCards = questionsContainer.querySelectorAll('.question-card');
+    let unansweredQuestions = [];
+    
+    // Check if all questions have answers
+    questionCards.forEach((card, index) => {
+        const answerInput = card.querySelector('.question-answer');
+        const answer = answerInput.value.trim();
+        const submitButton = card.querySelector('.submit-question-answer');
+        
+        // If not already submitted and answer is empty, add to unanswered
+        if (!submitButton.disabled && !answer) {
+            unansweredQuestions.push(index + 1);
+        }
+    });
+    
+    // If there are unanswered questions, show warning
+    if (unansweredQuestions.length > 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Incomplete Submission',
+            html: `You haven't answered the following questions: <br><strong>${unansweredQuestions.join(', ')}</strong><br>Do you want to submit only the answered questions?`,
+            showCancelButton: true,
+            confirmButtonText: 'Submit Answered Only',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit only the answered questions
+                submitAnsweredQuestions();
+            }
+        });
+        return;
+    }
+    
+    // Submit all answered questions
+    submitAnsweredQuestions();
+    
+    // Function to submit all answered questions
+    async function submitAnsweredQuestions() {
+        let submissionPromises = [];
+        
+        // For each question card with an answer
+        questionCards.forEach((card) => {
+            const answerInput = card.querySelector('.question-answer');
+            const answer = answerInput.value.trim();
+            const submitButton = card.querySelector('.submit-question-answer');
+            const questionIndex = parseInt(card.dataset.questionIndex);
+            
+            // If not already submitted and has an answer
+            if (!submitButton.disabled && answer) {
+                // Trigger click on the submit button
+                submissionPromises.push(new Promise((resolve) => {
+                    // Simulate click with delay to prevent server overload
+                    setTimeout(() => {
+                        submitButton.click();
+                        resolve();
+                    }, questionIndex * 500); // Stagger submissions
+                }));
+            }
+        });
+        
+        // Wait for all submissions
+        if (submissionPromises.length > 0) {
+            Swal.fire({
+                title: 'Submitting Answers',
+                html: 'Please wait while your answers are being evaluated...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            try {
+                await Promise.all(submissionPromises);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Answers Submitted',
+                    text: 'All answers have been submitted and evaluated successfully.',
+                    confirmButtonText: 'OK'
+                });
+            } catch (error) {
+                console.error('Error in batch submission:', error);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Submission Error',
+                    text: 'There was an error submitting some of your answers. Please check each question and try again where needed.',
+                    confirmButtonText: 'OK'
+                });
+            }
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: 'No New Submissions',
+                text: 'All questions have already been submitted or have no answers.',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+}
+
+// Logout function
+/**
+ * Handle the submission of a task answer
+ */
+async function handleTaskSubmission(event) {
+    const submitButton = event.target;
+    const taskItem = submitButton.closest('.task-item');
+    const submissionForm = taskItem.querySelector('.submission-form');
+    const answerInput = taskItem.querySelector('.answer-input');
+    const submissionStatus = taskItem.querySelector('.submission-status');
+    const aiFeedback = taskItem.querySelector('.ai-feedback');
+    
+    // Get user data
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    if (!userData) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Session Expired',
+            text: 'Please login again to continue.',
+            confirmButtonText: 'Login'
+        }).then(() => {
+            window.location.href = '/api/auth/Login';
+        });
+        return;
+    }
+    
+    // Get task data
+    const trackCard = taskItem.closest('.track-card');
+    const trackName = trackCard.querySelector('.track-name').textContent;
+    const taskName = taskItem.querySelector('.task-name').textContent;
+    const answer = answerInput.value.trim();
+    
+    // Validate answer
+    if (!answer) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Empty Answer',
+            text: 'Please enter your answer before submitting.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    try {
+        // Disable submit button and show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Submitting...';
+        submissionStatus.textContent = 'Evaluating your answer...';
+        submissionStatus.className = 'submission-status grading';
+        
+        // Get access token from local storage
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+            throw new Error('Access token not found');
+        }
+        
+        // Submit answer to server
+        const response = await fetch('/api/students/submit-task-answer', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                trackName,
+                studentId: userData.id,
+                taskName,
+                answer
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.status === 200) {
+            // Update UI with feedback and score
+            submissionStatus.textContent = `Submitted and graded. Score: ${data.score}/${data.maxScore}`;
+            submissionStatus.className = 'submission-status submitted';
+            
+            // Update task grade in the UI
+            taskItem.querySelector('.task-grade').textContent = `${data.score} / ${data.maxScore}`;
+            
+            // Show AI feedback
+            aiFeedback.classList.remove('d-none');
+            aiFeedback.querySelector('.feedback-content').textContent = data.feedback;
+            
+            const feedbackScore = aiFeedback.querySelector('.feedback-score');
+            const scorePercentage = (data.score / data.maxScore) * 100;
+            
+            if (scorePercentage >= 70) {
+                feedbackScore.textContent = `Great job! ${data.score}/${data.maxScore} points awarded.`;
+                feedbackScore.className = 'feedback-score mt-2 font-weight-bold correct';
+            } else if (scorePercentage >= 40) {
+                feedbackScore.textContent = `Good effort! ${data.score}/${data.maxScore} points awarded.`;
+                feedbackScore.className = 'feedback-score mt-2 font-weight-bold';
+            } else {
+                feedbackScore.textContent = `You can do better! ${data.score}/${data.maxScore} points awarded.`;
+                feedbackScore.className = 'feedback-score mt-2 font-weight-bold incorrect';
+            }
+            
+            // Disable input and button
+            answerInput.disabled = true;
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Submitted';
+            
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Task Submitted',
+                text: `Your answer has been evaluated. Score: ${data.score}/${data.maxScore}`,
+                confirmButtonText: 'OK'
+            });
+            
+        } else if (response.status === 400 && data.message === 'Task already submitted') {
+            // Task was already submitted
+            submissionStatus.textContent = `Already submitted. Score: ${data.score}`;
+            submissionStatus.className = 'submission-status submitted';
+            
+            // Disable input and button
+            answerInput.disabled = true;
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Already Submitted';
+            
+            if (data.feedback) {
+                // Show previous feedback
+                aiFeedback.classList.remove('d-none');
+                aiFeedback.querySelector('.feedback-content').textContent = data.feedback;
+                aiFeedback.querySelector('.feedback-score').textContent = `${data.score} points awarded.`;
+            }
+            
+            Swal.fire({
+                icon: 'info',
+                title: 'Already Submitted',
+                text: 'This task has already been submitted and cannot be resubmitted.',
+                confirmButtonText: 'OK'
+            });
+            
+        } else {
+            // Handle error
+            throw new Error(data.message || 'Error submitting task');
+        }
+        
+    } catch (error) {
+        console.error('Error submitting task:', error);
+        
+        // Reset UI
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Submit Answer';
+        submissionStatus.textContent = 'Submission failed. Try again.';
+        submissionStatus.className = 'submission-status not-submitted';
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Submission Failed',
+            text: error.message || 'An error occurred while submitting your answer. Please try again.',
+            confirmButtonText: 'OK'
+        });
+    }
+}
+
+/**
+ * Setup task submission UI based on task status
+ */
+function setupTaskSubmission(taskElement, task) {
+    // En la nueva estructura, no necesitamos configurar la sección de envío global
+    // ya que cada pregunta tiene su propia sección de envío
+    
+    // Actualizar el estado general de la tarea
+    const taskStatus = taskElement.querySelector('.task-overall-status');
+    
+    if (taskStatus) {
+        // Calcular el progreso de la tarea
+        let totalAnswered = 0;
+        let totalScore = 0;
+        const totalPoints = task.taskDegree || 100;
+        
+        if (task.answers && Array.isArray(task.answers)) {
+            totalAnswered = task.answers.filter(a => a && a.submitted).length;
+            task.answers.forEach(a => {
+                if (a && a.submitted) {
+                    totalScore += a.score || 0;
+                }
+            });
+        }
+        
+        // Obtener el número total de preguntas
+        let questions = [];
+        try {
+            if (task.Questions) {
+                questions = JSON.parse(task.Questions);
+            }
+        } catch (error) {
+            console.error('Error parsing questions:', error);
+        }
+        
+        const totalQuestions = questions.length || 0;
+        
+        // Actualizar la visualización del estado
+        if (totalQuestions === 0) {
+            // No hay preguntas
+            taskStatus.innerHTML = '';
+        } else if (totalAnswered === 0) {
+            // Ninguna pregunta respondida
+            taskStatus.innerHTML = '<span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i> No questions answered</span>';
+        } else if (totalAnswered < totalQuestions) {
+            // Algunas preguntas respondidas
+            taskStatus.innerHTML = `<span class="badge badge-info"><i class="fas fa-spinner"></i> ${totalAnswered}/${totalQuestions} questions answered</span>`;
+        } else {
+            // Todas las preguntas respondidas
+            const percentage = (totalScore / totalPoints) * 100;
+            if (percentage >= 70) {
+                taskStatus.innerHTML = `<span class="badge badge-success"><i class="fas fa-check-circle"></i> Completed with ${totalScore}/${totalPoints} points</span>`;
+            } else if (percentage >= 40) {
+                taskStatus.innerHTML = `<span class="badge badge-primary"><i class="fas fa-check"></i> Completed with ${totalScore}/${totalPoints} points</span>`;
+            } else {
+                taskStatus.innerHTML = `<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Completed with ${totalScore}/${totalPoints} points</span>`;
+            }
+        }
+    }
+    
+    // Configurar botón de envío de todas las respuestas
+    const submitAllButton = taskElement.querySelector('.submit-all-answers');
+    if (submitAllButton) {
+        // Si todas las preguntas ya han sido respondidas, deshabilitar el botón
+        let questions = [];
+        try {
+            if (task.Questions) {
+                questions = JSON.parse(task.Questions);
+            }
+        } catch (error) {
+            console.error('Error parsing questions:', error);
+        }
+        
+        if (questions.length > 0 && task.answers && Array.isArray(task.answers)) {
+            const allAnswered = task.answers.filter(a => a && a.submitted).length === questions.length;
+            if (allAnswered) {
+                submitAllButton.disabled = true;
+                submitAllButton.textContent = 'All Answers Submitted';
+            }
+        }
+    }
+}
+
+/**
+ * Logout function
+ */
+function logout() {
+    // Clear user data from local storage
+    localStorage.removeItem('userData');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    
+    // Redirect to login page
+    window.location.href = '/api/auth/Login';
+}

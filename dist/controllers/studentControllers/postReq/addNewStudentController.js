@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.addNewStudent = void 0;
 const tracksSchema_1 = require("../../../models/tracksSchema");
 const tracksSchema_2 = require("../../../models/tracksSchema");
+const studentSchema_1 = require("../../../models/studentSchema");
 const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { trackName, studentName } = req.body;
@@ -56,15 +57,39 @@ const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         // Check if track has data and if first student has BasicTotal
         if (trackData && trackData.trackData && trackData.trackData.length > 0 && trackData.trackData[0].BasicTotal) {
             tasks = JSON.parse(JSON.stringify(trackData.trackData[0].BasicTotal)); // Deep copy to avoid reference issues
-            // Reset all student task degrees to 0
+            // Reset all student task degrees to 0 and ensure Questions field is properly set
             for (const task of tasks) {
                 task.studentTaskDegree = 0;
+                // Ensure Questions field exists and is a string as per updated schema
+                if (task.Questions === undefined || task.Questions === null) {
+                    // If no questions data, set it as an empty array string
+                    task.Questions = JSON.stringify([]);
+                }
+                else if (typeof task.Questions === 'number') {
+                    // If it's still a number from old format, convert to empty array string
+                    task.Questions = JSON.stringify([]);
+                }
+                else if (typeof task.Questions !== 'string') {
+                    // Ensure it's a string
+                    task.Questions = JSON.stringify(task.Questions);
+                }
             }
         }
         else {
-            // If no existing tasks found, create a default empty task
+            // If no existing tasks found, create a default empty task array
             console.log('No BasicTotal found for this track, creating default empty tasks array');
             tasks = [];
+            // If there's track data but no tasks, we might need to create a default task
+            // This helps avoid validation errors when no tasks exist at all
+            if (trackData && trackData.trackData && trackData.trackData.length > 0) {
+                console.log('Track exists but has no tasks, adding a default empty task');
+                tasks.push({
+                    taskName: 'Default Task',
+                    taskDegree: 0,
+                    Questions: JSON.stringify([]),
+                    studentTaskDegree: 0,
+                });
+            }
         }
         const Student = {
             ID: studentId,
@@ -100,6 +125,21 @@ const addNewStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if (!updatedTrack) {
             res.status(500).json({ message: "Failed to add student" });
             return;
+        }
+        const gitStudent = yield studentSchema_1.StudentData.findOne({ name: studentName });
+        if (!gitStudent) {
+            const newStudent = new studentSchema_1.StudentData({
+                name: studentName,
+                tracks: [trackName]
+            });
+            const savedStudent = yield newStudent.save();
+            if (!savedStudent) {
+                res.status(500).json({ message: "Failed to add student" });
+                return;
+            }
+        }
+        else {
+            yield gitStudent.updateOne({ $push: { tracks: trackName } });
         }
         res.status(201).json({ message: "Student added successfully", track: updatedTrack, studentId: studentId });
     }

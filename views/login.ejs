@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">      
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/css/login.css">  
+    <link rel="stylesheet" href="/css/login-toggle.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -14,6 +15,10 @@
     <div class="login-container">
         <div class="form-container">
             <div class="form-title">Welcome Back</div>
+            <div class="login-toggle">
+                <button type="button" class="toggle-btn active" id="adminLoginBtn">Admin Login</button>
+                <button type="button" class="toggle-btn" id="studentLoginBtn">Student Login</button>
+            </div>
             <form>
                 <div class="input-group">
                     <input type="text" placeholder="Email or Username" id="username" required />
