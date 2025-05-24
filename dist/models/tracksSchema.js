@@ -14,6 +14,7 @@ const trackSchema = new mongoose_1.default.Schema({
     trackAssignedTo: { type: String, required: true },
     trackData: { type: Array }
 });
+
 exports.Track = mongoose_1.default.model('Tracks', trackSchema);
 exports.addStudentSchema = zod_1.z.object({
     Id: zod_1.z.number().min(1, 'ID Is Required'),

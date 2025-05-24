@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { addStudentSchema } from '../../../models/tracksSchema';
 import { Track } from '../../../models/tracksSchema';
+import  { StudentData } from '../../../models/studentSchema';
+
 
 export const addNewStudent = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -89,6 +91,7 @@ export const addNewStudent = async (req: Request, res: Response): Promise<void> 
             studentStatus : "In Progress"
         });
 
+
         if (!parsedStudentData.success) {
             res.status(400).json({ message: "Invalid student data", errors: parsedStudentData.error.errors[0] });
             return;
@@ -105,6 +108,22 @@ export const addNewStudent = async (req: Request, res: Response): Promise<void> 
         if (!updatedTrack) {
             res.status(500).json({ message: "Failed to add student" });
             return;
+        }
+        
+        const gitStudent = await StudentData.findOne({ Name: studentName });
+
+        if (!gitStudent) {
+            const newStudent = new StudentData({
+                name : studentName,
+                tracks : [trackName]
+            });
+            const savedStudent = await newStudent.save();
+            if (!savedStudent) {
+                res.status(500).json({ message: "Failed to add student" });
+                return;
+            }
+        } else {
+            await gitStudent.updateOne({ $push: { tracks: trackName } });
         }
 
         res.status(201).json({ message: "Student added successfully", track: updatedTrack,  studentId: studentId });

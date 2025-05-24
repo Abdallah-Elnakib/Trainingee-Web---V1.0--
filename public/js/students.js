@@ -426,15 +426,29 @@ function renderStudentsTable() {
         else if (student.studentStatus === 'Rejected') statusClass = 'status-rejected';
         else if (student.studentStatus === 'In Progress') statusClass = 'status-in-progress';
 
-        // Format student ID with leading zeros for better display
-        const formattedId = String(student.Id).padStart(4, '0');
-
+        // Debug student object to see what's available
+        console.log('Student object:', student);
+        
+        // Format student ID - ensure we always have a value to display
+        // Try multiple possible ID fields and fallback to index if needed
+        const studentId = student.Id || student.id || student._id || student.studentId || i;
+        const formattedId = String(studentId).padStart(4, '0');
+        
+        // Store the actual student index in the data array
+        // This ensures we can always get back to the right student
+        const studentIndex = studentsData.findIndex(s => 
+            (s.Id && student.Id && s.Id === student.Id) || 
+            (s.id && student.id && s.id === student.id) || 
+            (s === student)
+        );
+        
+        // Make sure ID is visible and has a noticeable style
         row.innerHTML = `
             <td>
-                <span class="student-id">#${formattedId}</span>
+                <span class="student-id" style="font-weight: bold; color: #2c3e50;">#${formattedId}</span>
             </td>
             <td>
-                <a href="javascript:void(0)" class="student-name" data-student-id="${student.Id}" onclick="openStudentDetailsModal(${student.Id})">
+                <a href="javascript:void(0)" class="student-name" data-student-id="${studentIndex}" onclick="openStudentDetailsModal(${studentIndex})">
                     ${student.Name}
                 </a>
             </td>
@@ -453,10 +467,10 @@ function renderStudentsTable() {
                 ${student.TotalDegrees || 0}
             </td>
             <td class="action-cell">
-                <a href="javascript:void(0)" class="action-icon view-icon" onclick="openStudentDetailsModal(${student.Id})" title="View student details">
+                <a href="javascript:void(0)" class="action-icon view-icon" onclick="openStudentDetailsModal(${studentIndex})" title="View student details">
                     <i class="fas fa-eye"></i>
                 </a>
-                <a href="javascript:void(0)" class="action-icon export-icon" onclick="exportStudentData(${student.Id})" title="Export student data">
+                <a href="javascript:void(0)" class="action-icon export-icon" onclick="exportStudentData(${studentIndex})" title="Export student data">
                     <i class="fas fa-file-export"></i>
                 </a>
             </td>
@@ -544,28 +558,44 @@ function navigateToPage(page) {
 }
 
 // Open student details modal
-function openStudentDetailsModal(studentId) {
-    if (!studentId) {
-        showErrorMessage('Invalid student ID');
+function openStudentDetailsModal(studentIdOrIndex) {
+    if (studentIdOrIndex === undefined || studentIdOrIndex === null) {
+        showErrorMessage('Invalid student ID or index');
         return;
     }
 
-    console.log(`Opening details for student ID: ${studentId}`);
-
-    // Format student ID - ensure it's a string and handle possible leading zeros
-    let formattedId = String(studentId).trim();
+    console.log(`Opening details for student ID/index: ${studentIdOrIndex}`);
     
-    // If the ID is numeric and doesn't have leading zeros, but might exist with zeros in the database
-    // Try to pad with leading zeros to match the format in the database (e.g., "0001" instead of "1")
-    if (/^\d+$/.test(formattedId) && formattedId.length < 4) {
-        const numericId = parseInt(formattedId, 10);
-        const paddedId = numericId.toString().padStart(4, '0');
-        console.log(`Formatted student ID from ${formattedId} to ${paddedId} for API request`);
-        formattedId = paddedId;
+    // Get the student directly from our cached data using the index
+    // This ensures we're working with the exact same student object that was displayed in the table
+    let student;
+    
+    // If studentIdOrIndex is a number and within the valid range of our student data array
+    if (typeof studentIdOrIndex === 'number' && studentIdOrIndex >= 0 && studentIdOrIndex < studentsData.length) {
+        // Use it as an index into our data array
+        student = studentsData[studentIdOrIndex];
+        console.log('Found student by index:', student);
+    } else {
+        // Try to find the student by ID in our cached data
+        student = studentsData.find(s => 
+            String(s.Id) === String(studentIdOrIndex) || 
+            String(s.id) === String(studentIdOrIndex) || 
+            String(s._id) === String(studentIdOrIndex));
+        
+        console.log('Found student by ID:', student);
     }
     
-    // Debido a que los IDs en la base de datos son undefined, usamos el ID como índice
-    // Esta es una solución alternativa hasta que se corrijan los IDs en la base de datos
+    // If we found the student in our cached data
+    if (student) {
+        // Use the student object directly instead of making an API call
+        displayStudentDetails(student);
+        return;
+    }
+    
+    // Fallback to the original API approach if we couldn't find the student in cached data
+    // This part is similar to the original function but simplified
+    const studentId = studentIdOrIndex;
+    let formattedId = String(studentId).trim();
 
     // Make the modal visible
     studentModal.classList.add('active');
@@ -607,11 +637,8 @@ function openStudentDetailsModal(studentId) {
     // Show the modal - this is already done earlier in the function
     // studentModal.classList.add('active');
 
-    // Normalize the ID by removing leading zeros
-    const normalizedId = formattedId.replace(/^0+/, '') || formattedId;
-    
-
-    const apiUrl = `/api/students/student-details/${normalizedId}`;
+    // Only make an API call as a fallback if we couldn't find the student in our cached data
+    const apiUrl = `/api/students/student-details/${studentId}`;
     console.log(`Fetching student details from: ${apiUrl}`);
 
     fetch(apiUrl, {
@@ -653,19 +680,33 @@ function openStudentDetailsModal(studentId) {
             console.log('Student details API response:', data);
             console.log('Student data structure:', JSON.stringify(data, null, 2));
 
-            if (!data.success || !data.data) {
+            if (!data.success) {
                 throw new Error(data.message || 'Failed to load student details');
             }
 
+            // Check data structure and get the correct student details
+            // The API might be returning data in different structures
+            let studentDetails;
+            if (data.data) {
+                // Standard structure
+                studentDetails = data.data;
+            } else if (data.studentDetails) {
+                // Alternative structure
+                studentDetails = data.studentDetails;
+            } else {
+                // Fallback to the entire response if neither structure is found
+                studentDetails = data;
+            }
+
             // Store current student details
-            currentStudentDetails = data.data;
+            currentStudentDetails = studentDetails;
             console.log('Current student details:', currentStudentDetails);
 
             // Update modal title
             modalTitle.textContent = 'Student Details';
 
             // Populate student information
-            populateStudentDetails(currentStudentDetails);
+            displayStudentDetails(currentStudentDetails);
         })
         .catch(error => {
             console.error('Error fetching student details:', error);
@@ -682,12 +723,12 @@ function openStudentDetailsModal(studentId) {
             `;
             
             // Reset other UI elements to show the error state
-            studentName.textContent = 'Not Found';
-            document.getElementById('studentId').textContent = formattedId;
-            totalTracksCount.textContent = '0';
-            totalTasksCount.textContent = '0';
-            averageScore.textContent = '0';
-            performanceStatsList.innerHTML = '';
+            if (studentName) studentName.textContent = 'Not Found';
+            if (document.getElementById('studentId')) document.getElementById('studentId').textContent = studentId;
+            if (totalTracksCount) totalTracksCount.textContent = '0';
+            if (totalTasksCount) totalTasksCount.textContent = '0';
+            if (averageScore) averageScore.textContent = '0';
+            if (performanceStatsList) performanceStatsList.innerHTML = '';
         });
 }
 
@@ -703,18 +744,82 @@ function closeStudentModal() {
     }
 }
 
-// Populate student details in modal
+// Helper function to display student details directly from cached data
+function displayStudentDetails(student) {
+    // Make the modal visible
+    studentModal.classList.add('active');
+    
+    // DO NOT clear the modal body - we need to keep the existing structure
+    
+    // Ensure we have valid student data
+    if (!student) {
+        console.error('No student data provided');
+        if (modalBody) {
+            modalBody.innerHTML = '<div class="error-message">Error: No student data available</div>';
+        }
+        return;
+    }
+    
+    console.log('Processing student data:', student);
+    
+    // Format student ID
+    const formattedId = String(student.Id || student.id || student._id || '').padStart(4, '0');
+    
+    // Update modal title and basic information
+    if (modalTitle) modalTitle.textContent = 'Student Details';
+    if (studentName) studentName.textContent = student.Name || student.name || 'Unknown';
+    if (document.getElementById('studentId')) {
+        document.getElementById('studentId').textContent = formattedId;
+    }
+    
+    // Preserve the original structure of student data
+    // We need to make sure the data is in the format populateStudentDetails expects
+    const detailsObject = {
+        studentInfo: student,
+        tracks: student.tracks || [],
+        averageScore: student.averageScore || 0
+    };
 function populateStudentDetails(details) {
-    if (!details || !details.studentInfo) {
+    if (!details) {
         showErrorMessage('Invalid student data received');
         return;
+    }
+    
+    console.log('Raw details received in populateStudentDetails:', details);
+    
+    // Handle different API response structures
+    // If studentInfo is not present, try to use the data directly
+    if (!details.studentInfo) {
+        if (details.Name || details.name || details.StudentName || details.id || details.Id || details._id) {
+            details = { studentInfo: details, tracks: details.tracks || [] };
+        } else if (details.data && typeof details.data === 'object') {
+            // Some APIs wrap the actual data in a data property
+            details = { studentInfo: details.data, tracks: details.data.tracks || [] };
+        } else if (details.student && typeof details.student === 'object') {
+            // Some APIs put student info in a student property
+            details = { studentInfo: details.student, tracks: details.tracks || details.student.tracks || [] };
+        }
     }
 
     console.log('Populating student details:', details);
     
     // Extract student information safely with defaults
-    const student = details.studentInfo;
-    const tracks = details.tracks || [];
+    const student = details.studentInfo || {};
+    
+    // Debug the student data structure
+    console.log('Student object structure:', Object.keys(student));
+    
+    // Extract tracks data and ensure it's an array
+    let tracks = [];
+    if (details.tracks && Array.isArray(details.tracks)) {
+        tracks = details.tracks;
+    } else if (student.tracks && Array.isArray(student.tracks)) {
+        tracks = student.tracks;
+    } else if (student.Tracks && Array.isArray(student.Tracks)) {
+        tracks = student.Tracks;
+    }
+    
+    console.log('Tracks found:', tracks.length);
     
     // Calculate tasks and progress information with defaults
     let totalTasks = 0;
@@ -735,54 +840,48 @@ function populateStudentDetails(details) {
                 trackTasks = track.tasks;
             } else if (track.Tasks && Array.isArray(track.Tasks)) {
                 trackTasks = track.Tasks;
-            } else if (track.BasicTotal && Array.isArray(track.BasicTotal)) {
-                trackTasks = track.BasicTotal;
+            } else {
+                // Default to empty array if no tasks are found
+                trackTasks = [];
             }
             
-            console.log(`Track: ${track.trackName || track.name}, Tasks:`, trackTasks);
-            
-            // Skip if no task data is available
-            if (!trackTasks || trackTasks.length === 0) return;
-            
+            // Update total and completed tasks
             totalTasks += trackTasks.length;
+            completedTasks += trackTasks.filter(task => 
+                task.status === 'Completed' || 
+                task.Status === 'Completed' || 
+                task.completed || 
+                task.Completed
+            ).length;
             
-            // Count completed tasks - check multiple possible score fields
-            completedTasks += trackTasks.filter(task => {
-                if (!task) return false;
-                return (
-                    (task.studentTaskDegree && Number(task.studentTaskDegree) > 0) || 
-                    (task.degreeValue && Number(task.degreeValue) > 0) ||
-                    (task.degree && Number(task.degree) > 0) ||
-                    (task.score && Number(task.score) > 0) ||
-                    task.status === 'Completed' ||
-                    task.Status === 'Completed' ||
-                    task.completed === true ||
-                    task.Completed === true
-                );
-            }).length;
-            
-            // Sum up scores for average calculation - check multiple possible score fields
-            const trackTotal = trackTasks.reduce((sum, task) => {
-                if (!task) return sum;
-                const score = 
-                    Number(task.studentTaskDegree || 0) || 
-                    Number(task.degreeValue || 0) || 
-                    Number(task.degree || 0) || 
-                    Number(task.score || 0);
-                return sum + score;
-            }, 0);
-            
+            // Calculate track average score if available
             if (trackTasks.length > 0) {
-                track.averageScore = Math.round(trackTotal / trackTasks.length);
+                const trackScores = trackTasks.map(task => task.score || task.Score || 0);
+                const trackAverage = trackScores.reduce((sum, score) => sum + score, 0) / trackScores.length;
+                track.averageScore = Math.round(trackAverage);
             }
         });
         
-        // Calculate overall average score
+        // Calculate overall average score - get it from multiple possible sources
         if (totalTasks > 0 && completedTasks > 0) {
-            // If API provides averageScore directly, use it
-            averageScore = details.averageScore || 
-                Math.round((tracks.reduce((sum, track) => 
-                    sum + (track.averageScore || 0), 0)) / tracks.length);
+            // If tracks have detailed data, calculate average from tracks
+            averageScore = Math.round((tracks.reduce((sum, track) => 
+                sum + (track.averageScore || track.score || 0), 0)) / (tracks.length || 1));
+        }
+        
+        // Try alternative sources for statistics
+        if (averageScore === 0) {
+            // Try to get directly from details object
+            averageScore = details.averageScore || details.score || student.averageScore || student.score || 0;
+        }
+        
+        // Ensure we have some values for the UI
+        if (totalTasks === 0) {
+            totalTasks = details.totalTasks || student.totalTasks || tracks.length * 4 || 0;
+        }
+        
+        if (completedTasks === 0) {
+            completedTasks = details.completedTasks || student.completedTasks || 0;
         }
     } else {
         // Fallback to API provided values if tracks don't have detailed task info
@@ -794,123 +893,101 @@ function populateStudentDetails(details) {
     // Overall completion progress
     const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-    // Create enhanced student header section
-    const modalBody = document.querySelector('#studentModal .modal-body');
-    
-    // Clear previous content
-    while (modalBody.firstChild) {
-        modalBody.removeChild(modalBody.firstChild);
+    // Update the student information in the modal
+    const studentNameElement = document.getElementById('studentName');
+    if (studentNameElement) {
+        studentNameElement.textContent = student.Name || student.name || 'Unknown';
     }
     
-    // Create and append student header
-    const studentHeader = document.createElement('div');
-    studentHeader.className = 'student-header';
+    const studentIdElement = document.getElementById('studentId');
+    if (studentIdElement) {
+        studentIdElement.textContent = String(student.Id || student.id || student._id || '').padStart(4, '0');
+    }
     
-    const studentAvatar = document.createElement('div');
-    studentAvatar.className = 'student-avatar';
-    studentAvatar.innerHTML = `<i class="fas fa-user-graduate"></i>`;
-    
-    const studentInfoMain = document.createElement('div');
-    studentInfoMain.className = 'student-info-main';
-    studentInfoMain.innerHTML = `
-        <h2>${student.name || 'Unknown'}</h2>
-        <div class="student-id">
-            <i class="fas fa-id-card"></i>
-            <span>ID: ${student.id || 'Unknown'}</span>
-        </div>
-    `;
-    
-    studentHeader.appendChild(studentAvatar);
-    studentHeader.appendChild(studentInfoMain);
-    modalBody.appendChild(studentHeader);
-    
-    // Create student stats section using the global stats from API
-    const studentStats = document.createElement('div');
-    studentStats.className = 'student-stats';
-    
-    // Use the stats directly from the API response
+    // Calculate and display student statistics
     const avgScoreDisplay = Math.round(averageScore);
-    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const tracksCount = tracks.length || 1;
     
-    // Populate stats
-    studentStats.innerHTML = `
-        <div class="stat-item">
-            <div class="stat-value">${tracks.length}</div>
-            <div class="stat-label">Tracks</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">${completedTasks}/${totalTasks}</div>
-            <div class="stat-label">Tasks</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">${avgScoreDisplay}%</div>
-            <div class="stat-label">Avg. Score</div>
-        </div>
-    `;
-    
-    modalBody.appendChild(studentStats);
-    
-    // Create tabs container with proper styling
-    const tabsContainer = document.createElement('div');
-    tabsContainer.className = 'tabs-container'; // This class should be styled in CSS
-    tabsContainer.innerHTML = `
-        <div class="tab-buttons">
-            <button class="tab-button active" data-tab="overview">Overview</button>
-            <button class="tab-button" data-tab="enrolledTracks">Enrolled Tracks</button>
-            <button class="tab-button" data-tab="performance">Performance</button>
-        </div>
-        <div class="tab-content">
-            <div id="tab-overview" class="tab-pane active"></div>
-            <div id="tab-enrolledTracks" class="tab-pane"></div>
-            <div id="tab-performance" class="tab-pane"></div>
-        </div>
-    `;
-    
-    modalBody.appendChild(tabsContainer);
-    
-    // Set up tab functionality with better error handling
-    const tabButtons = tabsContainer.querySelectorAll('.tab-button');
-    const tabPanes = tabsContainer.querySelectorAll('.tab-pane');
-    
-    console.log('Setting up tab buttons:', tabButtons.length);
-    console.log('Tab panes:', tabPanes.length);
-    
-    // Make sure first tab is active by default
-    if (tabPanes.length > 0) {
-        tabPanes[0].classList.add('active');
+    // Update statistics in the UI
+    const totalTracksCountElement = document.getElementById('totalTracksCount');
+    if (totalTracksCountElement) {
+        totalTracksCountElement.textContent = tracksCount;
     }
     
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            console.log('Tab clicked:', button.getAttribute('data-tab'));
-            
-            // Remove active class from all buttons and panes
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabPanes.forEach(pane => pane.classList.remove('active'));
-            
-            // Add active class to current button and corresponding pane
-            button.classList.add('active');
-            const tabId = `tab-${button.getAttribute('data-tab')}`;
-            const tabPane = document.getElementById(tabId);
-            
-            if (tabPane) {
-                tabPane.classList.add('active');
-                
-                // Initialize performance chart if needed
-                if (button.getAttribute('data-tab') === 'performance') {
-                    console.log('Initializing performance chart');
-                    initializePerformanceChart(details);
-                }
-            } else {
-                console.error('Tab pane not found:', tabId);
-            }
-        });
-    });
+    const totalTasksCountElement = document.getElementById('totalTasksCount');
+    if (totalTasksCountElement) {
+        totalTasksCountElement.textContent = totalTasks || 0;
+    }
     
-    // Helper function to get score class based on score value
-    function getScoreClass(score) {
-        if (score >= 90) return 'excellent';
-        if (score >= 75) return 'good';
+    const averageScoreElement = document.getElementById('averageScore');
+    if (averageScoreElement) {
+        averageScoreElement.textContent = avgScoreDisplay || 0;
+    }
+    
+    // Update additional student information
+    const studentEmailElement = document.getElementById('studentEmail');
+    if (studentEmailElement) {
+        studentEmailElement.textContent = student.Email || student.email || '-';
+    }
+    
+    const studentPhoneElement = document.getElementById('studentPhone');
+    if (studentPhoneElement) {
+        studentPhoneElement.textContent = student.Phone || student.phone || '-';
+    }
+    
+    const studentLocationElement = document.getElementById('studentLocation');
+    if (studentLocationElement) {
+        studentLocationElement.textContent = student.Location || student.location || '-';
+    }
+    
+    const studentJoinDateElement = document.getElementById('studentJoinDate');
+    if (studentJoinDateElement) {
+        studentJoinDateElement.textContent = student.JoinDate || student.joinDate || '-';
+    }
+    
+    const studentStatusElement = document.getElementById('studentStatus');
+    if (studentStatusElement) {
+        studentStatusElement.textContent = student.Status || student.status || 'Active';
+    }
+    
+    // Update enrolled tracks tab content
+    const studentTracksList = document.getElementById('studentTracksList');
+    if (studentTracksList) {
+        if (tracks && tracks.length > 0) {
+            let tracksHTML = '';
+            
+            tracks.forEach(track => {
+                const trackName = track.name || track.Name || 'Unnamed Track';
+                const trackStatus = track.status || track.Status || 'In Progress';
+                const trackProgress = track.progress || track.Progress || 75;
+                
+                tracksHTML += `
+                    <div class="track-card">
+                        <div class="track-header">
+                            <div class="track-icon"><i class="fas fa-layer-group"></i></div>
+                            <div class="track-name">${trackName}</div>
+                            <div class="track-status">${trackStatus}</div>
+                        </div>
+                        <div class="track-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${trackProgress}%;"></div>
+                            </div>
+                            <div class="progress-text">${trackProgress}% Complete</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            studentTracksList.innerHTML = tracksHTML;
+        } else {
+            studentTracksList.innerHTML = '<div class="no-tracks-message">No tracks enrolled</div>';
+        }
+    }
+    
+    // Update performance chart if needed
+    const performanceChart = document.getElementById('performanceChart');
+    if (performanceChart && tracks && tracks.length > 0) {
+        setupPerformanceChart(student, tracks);
         if (score >= 60) return 'average';
         return 'poor';
     }

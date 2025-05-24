@@ -8,6 +8,7 @@ import { updateStudentTasks } from '../controllers/studentsControllers/patchReq/
 import { updateStudentStatus } from '../controllers/studentsControllers/patchReq/updateStudentStatusController';
 import { getAllStudents } from '../controllers/studentsControllers/getReq/getAllStudentsController';
 import { getStudentDetails } from '../controllers/studentsControllers/getReq/getStudentDetailsController';
+import {addNewStudentAccount} from '../controllers/studentControllers/postReq/addAStudentAccountController';
 import { verifyJWT } from '../middleware/verifyJWT';
 
 const router: Router = express.Router();
@@ -29,5 +30,7 @@ router.patch('/update-student-status/:trackName', updateStudentStatus);
 
 router.get('/all-students', getAllStudents as any);
 router.get('/student-details/:studentId', getStudentDetails as any);
+
+router.post('/add-student-account', addNewStudentAccount);
 
 export default router;
