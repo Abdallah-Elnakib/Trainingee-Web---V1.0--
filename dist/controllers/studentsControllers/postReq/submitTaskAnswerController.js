@@ -11,9 +11,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.submitTaskAnswer = void 0;
 const tracksSchema_1 = require("../../../models/tracksSchema");
+const handleQuestionSubmission_1 = require("./handleQuestionSubmission");
 const submitTaskAnswer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { trackName, studentId, taskName, answer } = req.body;
+        // Log para depuración
+        console.log('Received submission:', req.body);
+        const { trackName, studentId, taskName, answer, isQuestionSubmission, questionIndex, question, maxScore } = req.body;
+        // Verificar si es una solicitud de envío de pregunta individual
+        if (isQuestionSubmission === true && questionIndex !== undefined) {
+            // Manejar el envío de una pregunta individual
+            yield (0, handleQuestionSubmission_1.handleQuestionSubmission)(req, res);
+            return;
+        }
         // Validate required fields
         if (!trackName || !studentId || !taskName || !answer) {
             res.status(400).json({ message: 'Missing required fields' });

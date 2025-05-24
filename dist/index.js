@@ -23,7 +23,8 @@ const express_session_1 = __importDefault(require("express-session"));
 const path_1 = __importDefault(require("path"));
 const authRouter_1 = __importDefault(require("./router/authRouter"));
 const TracksRouter_1 = __importDefault(require("./router/TracksRouter"));
-const studentsRouter_1 = __importDefault(require("./router/studentsRouter"));
+// Importación con nombre exacto para evitar problemas de mayúsculas/minúsculas
+const studentsRouter_js_1 = __importDefault(require("./router/studentsRouter.js"));
 const homeController_1 = require("./controllers/authControllers/getReq/homeController");
 const tracksController_1 = require("./controllers/tracksControllers/getReq/tracksController");
 const studentsPageController_1 = require("./controllers/studentsControllers/getReq/studentsPageController");
@@ -45,7 +46,7 @@ exports.app.use(express_1.default.static('public'));
 // API Routes
 exports.app.use('/api/auth', authRouter_1.default);
 exports.app.use('/api/tracks', TracksRouter_1.default);
-exports.app.use('/api/students', studentsRouter_1.default);
+exports.app.use('/api/students', studentsRouter_js_1.default);
 exports.app.get('/', verifyJWT_1.verifyJWT, homeController_1.home);
 exports.app.get('/tracks', verifyJWT_1.verifyJWT, tracksController_1.tracksPage);
 exports.app.get('/students', verifyJWT_1.verifyJWT, studentsPageController_1.studentsPage);

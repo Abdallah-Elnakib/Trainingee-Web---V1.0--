@@ -308,25 +308,6 @@ function displayTaskQuestions(task, questionsContainer) {
 }
 
 /**
- * Update the task grade based on the answers
- */
-function updateTaskGrade(task, taskItem, totalPoints) {
-    const taskGradeElement = taskItem.querySelector('.task-grade');
-    if (taskGradeElement) {
-        let totalScore = 0;
-        // Calculate total score from all answered questions
-        if (task.answers && Array.isArray(task.answers)) {
-            task.answers.forEach((ans) => {
-                if (ans && ans.submitted) {
-                    totalScore += ans.score || 0;
-                }
-            });
-        }
-        taskGradeElement.textContent = `${totalScore} / ${totalPoints}`;
-    }
-}
-
-/**
  * Update the overall status of a task based on question submissions
  */
 function updateTaskOverallStatus(task, questionsContainer) {
@@ -390,7 +371,6 @@ async function handleQuestionSubmission(task, questionIndex, submitButton) {
     const answerInput = questionCard.querySelector('.question-answer');
     const answer = answerInput.value.trim();
     const questionStatus = questionCard.querySelector('.question-status');
-    const taskItem = questionCard.closest('.task-item');
     
     // Get user data
     const userData = JSON.parse(localStorage.getItem('userData'));
@@ -417,39 +397,52 @@ async function handleQuestionSubmission(task, questionIndex, submitButton) {
         return;
     }
     
-    // Disable submit button and show loading state
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Submitting...';
-    questionStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating...';
-    questionStatus.className = 'question-status text-info';
-    
     try {
-        // Get necessary information
+        // Get the track name from the track card
+        const taskItem = questionCard.closest('.task-item');
         const trackCard = taskItem.closest('.track-card');
         const trackName = trackCard.querySelector('.track-name').textContent.trim();
         const taskName = taskItem.querySelector('.task-name').textContent.trim();
+        
+        // Logs para depuración
+        console.log('Submission data:', {
+            trackName,
+            taskName,
+            studentId: userData.id,
+            questionIndex
+        });
+        
+        // Get access token from local storage
         const accessToken = localStorage.getItem('accessToken');
-        if (!accessToken) throw new Error('Access token not found');
+        if (!accessToken) {
+            throw new Error('Access token not found');
+        }
+        
+        // Disable submit button and show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Submitting...';
+        questionStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating...';
+        questionStatus.className = 'question-status text-info';
         
         // Get task questions
         let questions = [];
         try {
-            if (task.Questions) questions = JSON.parse(task.Questions);
-        } catch (parseError) {
-            console.error('Error parsing questions:', parseError);
+            if (task.Questions) {
+                questions = JSON.parse(task.Questions);
+            }
+        } catch (error) {
+            console.error('Error parsing questions:', error);
         }
         
         // Calculate points per question
         const totalPoints = task.taskDegree || 100;
         const pointsPerQuestion = Math.floor(totalPoints / questions.length);
         
-        // Log submission data
-        console.log('Submitting answer:', {
-            trackName, taskName, questionIndex, studentId: userData.id
-        });
+        // Usar la ruta de prueba simplificada para diagnóstico
+        console.log('Usando ruta de prueba simplificada');
 
-        // Submit answer to server
-        const response = await fetch('/api/students/submit-question-answer', {
+        // Hacer la solicitud al servidor
+        const response = await fetch('/api/students/test-submission', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
@@ -466,43 +459,82 @@ async function handleQuestionSubmission(task, questionIndex, submitButton) {
             })
         });
         
-        // Validate and parse response
+        // Verificar si la respuesta es JSON antes de intentar parsearla
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             const errorText = await response.text();
             console.error('Server returned non-JSON response:', errorText);
-            throw new Error('Server returned an invalid response format');
+            throw new Error('Server returned an invalid response format. Please try again later.');
         }
         
         const data = await response.json();
-        console.log('Server response:', data);
         
-        // Handle HTTP errors
         if (!response.ok) {
             throw new Error(data.message || 'Error submitting answer');
         }
         
-        // Handle previously submitted question
-        if (data.alreadySubmitted) {
-            handlePreviouslySubmittedQuestion(task, questionCard, submitButton, answerInput, 
-                                              questionStatus, questionIndex, data, taskItem, totalPoints);
-            return;
+        // Update status with feedback and score
+        if (data.score) {
+            const scorePercentage = (data.score / data.maxScore) * 100;
+            let statusClass = 'text-danger';
+            
+            if (scorePercentage >= 80) {
+                statusClass = 'text-success';
+            } else if (scorePercentage >= 60) {
+                statusClass = 'text-primary';
+            } else if (scorePercentage >= 40) {
+                statusClass = 'text-warning';
+            }
+            
+            questionStatus.innerHTML = `
+                <div>
+                    <strong>Score:</strong> ${data.score}/${data.maxScore}
+                </div>
+                <div class="mt-1">
+                    <strong>Feedback:</strong> ${data.feedback}
+                </div>
+            `;
+            questionStatus.className = `question-status ${statusClass}`;
+            
+            // Mark question as submitted
+            questionCard.classList.add('submitted');
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Submitted';
+            answerInput.readOnly = true;
+            
+            // Update task status
+            updateTaskStatus(task);
+                
+                taskGradeElement.textContent = `${totalScore} / ${totalPoints}`;
+            }
+            
+            // Update task answers in memory
+            if (!task.answers) task.answers = [];
+            task.answers[questionIndex] = {
+                answer: answer,
+                feedback: data.feedback,
+                score: data.score,
+                submitted: true
+            };
+            
+            // Update overall task status
+            const questionsContainer = questionCard.closest('.questions-container');
+            updateTaskOverallStatus(task, questionsContainer);
+            
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Answer Submitted',
+                text: `Your answer has been evaluated. Score: ${data.score}/${pointsPerQuestion}`,
+                confirmButtonText: 'OK'
+            });
+            
+        } else {
+            // Handle error
+            throw new Error(data.message || 'Error submitting answer');
         }
         
-        // Handle successful submission
-        if (data.score !== undefined) {
-            handleSuccessfulSubmission(task, questionCard, submitButton, answerInput, questionStatus,
-                                       questionIndex, data, taskItem, totalPoints, pointsPerQuestion);
-        } else if (data.message && data.message.includes('submitted successfully')) {
-            // Special case: Success but no score information
-            handleSuccessWithoutScore(submitButton, answerInput, questionCard, data);
-        } else {
-            // Unexpected response format
-            console.warn('Unexpected response format:', data);
-            throw new Error('Received an unexpected response format');
-        }
     } catch (error) {
-        // Handle submission errors
         console.error('Error submitting answer:', error);
         
         // Reset UI
@@ -511,7 +543,6 @@ async function handleQuestionSubmission(task, questionIndex, submitButton) {
         questionStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Submission failed';
         questionStatus.className = 'question-status text-danger';
         
-        // Show error message
         Swal.fire({
             icon: 'error',
             title: 'Submission Failed',
@@ -519,140 +550,6 @@ async function handleQuestionSubmission(task, questionIndex, submitButton) {
             confirmButtonText: 'OK'
         });
     }
-}
-
-/**
- * Handle a previously submitted question
- */
-function handlePreviouslySubmittedQuestion(task, questionCard, submitButton, answerInput, questionStatus, 
-                                           questionIndex, data, taskItem, totalPoints) {
-    console.log('Question was already submitted before, showing previous results');
-    
-    // Update UI
-    questionCard.classList.add('submitted');
-    submitButton.disabled = true;
-    submitButton.innerHTML = 'Submitted';
-    answerInput.readOnly = true;
-    
-    // Display score and feedback
-    updateQuestionStatusDisplay(questionStatus, data.score, data.maxScore, data.feedback);
-    
-    // Update answers in memory
-    if (!task.answers) task.answers = [];
-    task.answers[questionIndex] = {
-        answer: answerInput.value.trim(),
-        feedback: data.feedback,
-        score: data.score,
-        submitted: true
-    };
-    
-    // Show informative message
-    Swal.fire({
-        icon: 'info',
-        title: 'Previously Submitted',
-        text: `This question was already submitted. Your score: ${data.score}/${data.maxScore}`,
-        confirmButtonText: 'OK'
-    });
-    
-    // Update task status and grade
-    updateTaskStatus(task, questionCard, taskItem, totalPoints);
-}
-
-/**
- * Handle a successful submission with score
- */
-function handleSuccessfulSubmission(task, questionCard, submitButton, answerInput, questionStatus,
-                                    questionIndex, data, taskItem, totalPoints, pointsPerQuestion) {
-    // Update UI with score and feedback
-    updateQuestionStatusDisplay(questionStatus, data.score, data.maxScore, data.feedback);
-    
-    // Mark question as submitted
-    questionCard.classList.add('submitted');
-    submitButton.disabled = true;
-    submitButton.innerHTML = 'Submitted';
-    answerInput.readOnly = true;
-    
-    // Update answers in memory
-    if (!task.answers) task.answers = [];
-    task.answers[questionIndex] = {
-        answer: answerInput.value.trim(),
-        feedback: data.feedback,
-        score: data.score,
-        submitted: true
-    };
-    
-    // Update task status and grade
-    updateTaskStatus(task, questionCard, taskItem, totalPoints);
-    
-    // Show success message
-    Swal.fire({
-        icon: 'success',
-        title: 'Answer Submitted',
-        text: `Your answer has been evaluated. Score: ${data.score}/${pointsPerQuestion}`,
-        confirmButtonText: 'OK'
-    });
-}
-
-/**
- * Handle successful submission without score information
- */
-function handleSuccessWithoutScore(submitButton, answerInput, questionCard, data) {
-    // Update UI
-    submitButton.disabled = true;
-    submitButton.innerHTML = 'Submitted';
-    answerInput.readOnly = true;
-    questionCard.classList.add('submitted');
-    
-    // Show success message
-    Swal.fire({
-        icon: 'success',
-        title: 'Answer Submitted',
-        text: data.message || 'Your answer has been submitted successfully',
-        confirmButtonText: 'OK'
-    });
-}
-
-/**
- * Update the question status display with score and feedback
- */
-function updateQuestionStatusDisplay(questionStatus, score, maxScore, feedback) {
-    const scorePercentage = (score / maxScore) * 100;
-    let statusClass = 'text-danger';
-    
-    if (scorePercentage >= 80) {
-        statusClass = 'text-success';
-    } else if (scorePercentage >= 60) {
-        statusClass = 'text-primary';
-    } else if (scorePercentage >= 40) {
-        statusClass = 'text-warning';
-    }
-    
-    questionStatus.innerHTML = `
-        <div>
-            <strong>Score:</strong> ${score}/${maxScore}
-        </div>
-        <div class="mt-1">
-            <strong>Feedback:</strong> ${feedback}
-        </div>
-    `;
-    questionStatus.className = `question-status ${statusClass}`;
-}
-
-/**
- * Update task status and grade
- */
-function updateTaskStatus(task, questionCard, taskItem, totalPoints) {
-    // Get questions container
-    const questionsContainer = taskItem.querySelector('.questions-container') || 
-                              questionCard.closest('.questions-container');
-    
-    // Update task status if container exists
-    if (questionsContainer) {
-        updateTaskOverallStatus(task, questionsContainer);
-    }
-    
-    // Update task grade
-    updateTaskGrade(task, taskItem, totalPoints);
 }
 
 /**

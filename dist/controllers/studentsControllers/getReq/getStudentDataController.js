@@ -22,21 +22,85 @@ const getStudentData = (req, res) => __awaiter(void 0, void 0, void 0, function*
             return;
         }
         console.log('Found student:', student);
-        // Get tracks data for this student
+        // Get tracks data for this student (eliminando duplicados)
         const studentTracks = student.tracks || [];
-        console.log('Student tracks:', studentTracks);
-        const trackDataPromises = studentTracks.map((trackName) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log('Student tracks (original):', studentTracks);
+        // Eliminar tracks duplicados, manteniendo solo uno por nombre
+        const uniqueTrackNames = new Set();
+        const uniqueTracks = [];
+        // Primera pasada: obtener todos los nombres de tracks únicos
+        studentTracks.forEach((trackItem) => {
+            let trackName;
+            if (typeof trackItem === 'string') {
+                trackName = trackItem;
+            }
+            else if (typeof trackItem === 'object' && trackItem && trackItem.trackName) {
+                trackName = trackItem.trackName;
+            }
+            else {
+                return; // Ignorar elementos no reconocidos
+            }
+            // Si este trackName no está ya en el conjunto, añadirlo
+            if (!uniqueTrackNames.has(trackName)) {
+                uniqueTrackNames.add(trackName);
+                // Preferir el formato de objeto si está disponible
+                const objectFormat = studentTracks.find((t) => typeof t === 'object' && t && t.trackName === trackName);
+                uniqueTracks.push(objectFormat || trackName);
+            }
+        });
+        console.log('Student tracks (unique):', uniqueTracks);
+        // Definir tipo explícito para el array de tracks únicos
+        const uniqueTracksArray = uniqueTracks;
+        // Usar el array de tracks únicos en lugar del original
+        const trackDataPromises = uniqueTracksArray.map((trackItem) => __awaiter(void 0, void 0, void 0, function* () {
+            // Manejar estructura mixta de tracks (strings y objetos)
+            let trackName;
+            if (typeof trackItem === 'string') {
+                // Formato antiguo: string simple
+                trackName = trackItem;
+            }
+            else if (typeof trackItem === 'object' && trackItem && trackItem.trackName) {
+                // Formato nuevo: objeto con propiedad trackName
+                trackName = trackItem.trackName;
+            }
+            else {
+                console.log('Formato de track no reconocido:', trackItem);
+                return null;
+            }
             console.log('Processing track:', trackName);
             const track = yield tracksSchema_1.Track.findOne({ trackName });
             if (!track) {
                 console.log('Track not found:', trackName);
                 return null;
             }
+            // Verificar si trackData existe y es un array
+            if (!track.trackData || !Array.isArray(track.trackData)) {
+                console.log('Track data no es un array válido:', trackName);
+                // Crear un objeto vacío para este track en lugar de devolver null
+                return {
+                    trackName,
+                    status: 'Pending',
+                    degrees: 0,
+                    totalDegrees: 0,
+                    tasks: [],
+                    comments: 'No se encontraron datos del estudiante',
+                    studentTrackId: student._id // Corregido: usando student._id en lugar de studentId
+                };
+            }
             // Find student in track data by name instead of comparing name to itself
-            const studentData = track.trackData.find((std) => std.Name === student.name);
+            const studentData = track.trackData.find((std) => std && std.Name === student.name);
             if (!studentData) {
-                console.log('Student not found in track:', trackName);
-                return null;
+                console.log('Student not found in track data:', trackName);
+                // Crear un objeto vacío para este track en lugar de devolver null
+                return {
+                    trackName,
+                    status: 'Pending',
+                    degrees: 0,
+                    totalDegrees: 0,
+                    tasks: [],
+                    comments: 'No se encontraron datos del estudiante',
+                    studentTrackId: student._id // Corregido: usando student._id en lugar de studentId
+                };
             }
             console.log('Found student in track:', studentData.ID, studentData.Name);
             return {
@@ -54,12 +118,13 @@ const getStudentData = (req, res) => __awaiter(void 0, void 0, void 0, function*
         console.log('Tracks data length:', tracksData.length);
         // Find the student ID from track data if available
         const studentTrackId = tracksData.length > 0 ? tracksData[0].studentTrackId : null;
+        // Enviar el array de tracks únicos en lugar del original con duplicados
         res.status(200).json({
             student: {
                 id: studentTrackId || student._id,
                 name: student.name,
                 username: student.username,
-                tracks: student.tracks
+                tracks: uniqueTracksArray // Usar el array de tracks únicos en lugar de student.tracks
             },
             tracksData
         });

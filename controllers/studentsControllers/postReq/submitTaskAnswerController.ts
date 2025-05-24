@@ -1,10 +1,21 @@
 import { Request, Response } from 'express';
 import { Track } from '../../../models/tracksSchema';
 import { StudentData } from '../../../models/studentSchema';
+import { handleQuestionSubmission } from './handleQuestionSubmission';
 
 export const submitTaskAnswer = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { trackName, studentId, taskName, answer } = req.body;
+        // Log para depuración
+        console.log('Received submission:', req.body);
+        
+        const { trackName, studentId, taskName, answer, isQuestionSubmission, questionIndex, question, maxScore } = req.body;
+        
+        // Verificar si es una solicitud de envío de pregunta individual
+        if (isQuestionSubmission === true && questionIndex !== undefined) {
+            // Manejar el envío de una pregunta individual
+            await handleQuestionSubmission(req, res);
+            return;
+        }
         
         // Validate required fields
         if (!trackName || !studentId || !taskName || !answer) {

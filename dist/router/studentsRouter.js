@@ -32,6 +32,7 @@ router.get('/all-students', getAllStudentsController_1.getAllStudents);
 router.get('/student-details/:studentId', getStudentDetailsController_1.getStudentDetails);
 router.get('/student-data/:studentId', getStudentDataController_1.getStudentData);
 router.post('/submit-task-answer', submitTaskAnswerController_1.submitTaskAnswer);
+// Asegurarse de que esta ruta funcione correctamente
 router.post('/submit-question-answer', submitQuestionAnswerController_1.submitQuestionAnswer);
 router.post('/add-student-account', addAStudentAccountController_1.addNewStudentAccount);
 exports.default = router;

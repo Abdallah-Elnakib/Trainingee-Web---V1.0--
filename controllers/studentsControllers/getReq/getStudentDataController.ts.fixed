@@ -15,43 +15,11 @@ export const getStudentData = async (req: Request, res: Response): Promise<void>
 
         console.log('Found student:', student);
         
-        // Get tracks data for this student (eliminando duplicados)
+        // Get tracks data for this student
         const studentTracks = student.tracks || [];
-        console.log('Student tracks (original):', studentTracks);
+        console.log('Student tracks:', studentTracks);
         
-        // Eliminar tracks duplicados, manteniendo solo uno por nombre
-        const uniqueTrackNames = new Set<string>();
-        const uniqueTracks: any[] = [];
-        
-        // Primera pasada: obtener todos los nombres de tracks únicos
-        studentTracks.forEach((trackItem: any) => {
-            let trackName;
-            if (typeof trackItem === 'string') {
-                trackName = trackItem;
-            } else if (typeof trackItem === 'object' && trackItem && trackItem.trackName) {
-                trackName = trackItem.trackName;
-            } else {
-                return; // Ignorar elementos no reconocidos
-            }
-            
-            // Si este trackName no está ya en el conjunto, añadirlo
-            if (!uniqueTrackNames.has(trackName)) {
-                uniqueTrackNames.add(trackName);
-                // Preferir el formato de objeto si está disponible
-                const objectFormat = studentTracks.find((t: any) => 
-                    typeof t === 'object' && t && t.trackName === trackName
-                );
-                uniqueTracks.push(objectFormat || trackName);
-            }
-        });
-        
-        console.log('Student tracks (unique):', uniqueTracks);
-        
-        // Definir tipo explícito para el array de tracks únicos
-        const uniqueTracksArray: any[] = uniqueTracks;
-        
-        // Usar el array de tracks únicos en lugar del original
-        const trackDataPromises = uniqueTracksArray.map(async (trackItem: any) => {
+        const trackDataPromises = studentTracks.map(async (trackItem: any) => {
             // Manejar estructura mixta de tracks (strings y objetos)
             let trackName;
             if (typeof trackItem === 'string') {
@@ -124,13 +92,12 @@ export const getStudentData = async (req: Request, res: Response): Promise<void>
         // Find the student ID from track data if available
         const studentTrackId = tracksData.length > 0 ? tracksData[0].studentTrackId : null;
         
-        // Enviar el array de tracks únicos en lugar del original con duplicados
         res.status(200).json({
             student: {
                 id: studentTrackId || student._id,
                 name: student.name,
                 username: student.username,
-                tracks: uniqueTracksArray // Usar el array de tracks únicos en lugar de student.tracks
+                tracks: student.tracks
             },
             tracksData
         });

@@ -8,7 +8,8 @@ import session from 'express-session';
 import path from 'path';
 import auth from './router/authRouter';
 import tracks from './router/TracksRouter'
-import students from './router/studentsRouter'
+// Importación con nombre exacto para evitar problemas de mayúsculas/minúsculas
+import students from './router/studentsRouter.js'
 import { home } from './controllers/authControllers/getReq/homeController';
 import { tracksPage } from './controllers/tracksControllers/getReq/tracksController';
 import { studentsPage } from './controllers/studentsControllers/getReq/studentsPageController';
