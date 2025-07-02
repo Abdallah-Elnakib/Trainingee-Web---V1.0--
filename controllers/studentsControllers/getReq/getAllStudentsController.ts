@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Track } from '../../../models/tracksSchema';
+import { StudentData } from '../../../models/studentSchema';
 import mongoose from 'mongoose';
 
 export const getAllStudents = async (req: Request, res: Response) => {
@@ -10,6 +11,18 @@ export const getAllStudents = async (req: Request, res: Response) => {
         
         console.log('====== DEBUGGING STUDENT TRACKS ISSUE ======');
         console.log('Request query parameters:', req.query);
+        
+        // First, check if we can get any students from the StudentData collection
+        console.log('Checking StudentData collection...');
+        try {
+            const allStudentData = await StudentData.find().limit(10);
+            console.log(`Found ${allStudentData.length} student records in StudentData collection`);
+            if (allStudentData.length > 0) {
+                console.log('Sample student data:', allStudentData[0]);
+            }
+        } catch (studentDataError) {
+            console.error('Error accessing StudentData collection:', studentDataError);
+        }
         
         let trackQuery: any = {};
         if (track && track !== 'all') {
@@ -254,6 +267,36 @@ export const getAllStudents = async (req: Request, res: Response) => {
         }
         
         console.log('------------------------------------');
+        
+        // Log the final structure we're sending to the frontend
+        console.log(`Sending ${finalStudents.length} students to frontend`);
+        if (finalStudents.length > 0) {
+            console.log('First student data sample:', {
+                Id: finalStudents[0].Id,
+                Name: finalStudents[0].Name,
+                trackCount: finalStudents[0].trackCount,
+                studentStatus: finalStudents[0].studentStatus,
+                trackNames: finalStudents[0].trackNames
+            });
+        } else {
+            console.log('WARNING: No students found to return');
+        }
+        
+        // If no students found, try to check if there's any Track data at all
+        if (finalStudents.length === 0) {
+            const trackCount = await Track.countDocuments();
+            console.log(`Found ${trackCount} tracks in total`);
+            
+            if (trackCount > 0) {
+                const sampleTrack = await Track.findOne();
+                if (sampleTrack && sampleTrack.trackData && Array.isArray(sampleTrack.trackData)) {
+                    console.log(`Sample track has ${sampleTrack.trackData.length} student records`);
+                    if (sampleTrack.trackData.length > 0) {
+                        console.log('Sample student from track data:', sampleTrack.trackData[0]);
+                    }
+                }
+            }
+        }
         
         return res.status(200).json({
             success: true,

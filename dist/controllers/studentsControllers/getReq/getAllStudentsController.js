@@ -11,12 +11,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllStudents = void 0;
 const tracksSchema_1 = require("../../../models/tracksSchema");
+const studentSchema_1 = require("../../../models/studentSchema");
 const getAllStudents = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { track, status, search } = req.query;
         console.log('API Request - getAllStudents:', { track, status, search });
         console.log('====== DEBUGGING STUDENT TRACKS ISSUE ======');
         console.log('Request query parameters:', req.query);
+        // First, check if we can get any students from the StudentData collection
+        console.log('Checking StudentData collection...');
+        try {
+            const allStudentData = yield studentSchema_1.StudentData.find().limit(10);
+            console.log(`Found ${allStudentData.length} student records in StudentData collection`);
+            if (allStudentData.length > 0) {
+                console.log('Sample student data:', allStudentData[0]);
+            }
+        }
+        catch (studentDataError) {
+            console.error('Error accessing StudentData collection:', studentDataError);
+        }
         let trackQuery = {};
         if (track && track !== 'all') {
             trackQuery.trackName = track;
@@ -206,6 +219,34 @@ const getAllStudents = (req, res) => __awaiter(void 0, void 0, void 0, function*
             });
         }
         console.log('------------------------------------');
+        // Log the final structure we're sending to the frontend
+        console.log(`Sending ${finalStudents.length} students to frontend`);
+        if (finalStudents.length > 0) {
+            console.log('First student data sample:', {
+                Id: finalStudents[0].Id,
+                Name: finalStudents[0].Name,
+                trackCount: finalStudents[0].trackCount,
+                studentStatus: finalStudents[0].studentStatus,
+                trackNames: finalStudents[0].trackNames
+            });
+        }
+        else {
+            console.log('WARNING: No students found to return');
+        }
+        // If no students found, try to check if there's any Track data at all
+        if (finalStudents.length === 0) {
+            const trackCount = yield tracksSchema_1.Track.countDocuments();
+            console.log(`Found ${trackCount} tracks in total`);
+            if (trackCount > 0) {
+                const sampleTrack = yield tracksSchema_1.Track.findOne();
+                if (sampleTrack && sampleTrack.trackData && Array.isArray(sampleTrack.trackData)) {
+                    console.log(`Sample track has ${sampleTrack.trackData.length} student records`);
+                    if (sampleTrack.trackData.length > 0) {
+                        console.log('Sample student from track data:', sampleTrack.trackData[0]);
+                    }
+                }
+            }
+        }
         return res.status(200).json({
             success: true,
             count: finalStudents.length,

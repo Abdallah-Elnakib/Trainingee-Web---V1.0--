@@ -30,14 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fetch student data from server
     fetchStudentData(userData.id);
-    
-    // Setup event delegation for task submission
-    document.addEventListener('click', function(event) {
-        // Check if the clicked element is a submit answer button
-        if (event.target.classList.contains('submit-answer')) {
-            handleTaskSubmission(event);
-        }
-    });
 });
 
 async function fetchStudentData(studentId) {
@@ -116,9 +108,25 @@ function renderStudentData(data) {
                 statusBadge.classList.add('badge-secondary');
             }
             
-            // Display grades
+            // Display all grades and details
             trackElement.querySelector('.track-degrees').textContent = 
                 `Score: ${track.degrees || 0} / ${track.totalDegrees || 0}`;
+                
+            // Add additional grade info and comments if they exist
+            const trackHeader = trackElement.querySelector('.track-header');
+            const additionalInfo = document.createElement('div');
+            additionalInfo.className = 'track-additional-info mt-2';
+            additionalInfo.innerHTML = `
+                <div class="track-grades-details p-2 rounded" style="background-color: rgba(255,255,255,0.1);">
+                    <div><strong>Main Grade:</strong> ${track.degrees || 0}</div>
+                    <div><strong>Additional Grade:</strong> ${track.additional || 0}</div>
+                    <div><strong>Total Grade:</strong> ${track.totalDegrees || 0}</div>
+                </div>
+                <div class="track-comments mt-2 p-2 rounded" style="background-color: rgba(255,255,255,0.1);">
+                    <strong>Comments:</strong> ${track.comments || 'No comments'}
+                </div>
+            `;
+            trackHeader.appendChild(additionalInfo);
             
             // Get the task list element
             const taskList = trackElement.querySelector('.task-list');
@@ -132,9 +140,39 @@ function renderStudentData(data) {
                     // Fill in task data
                     taskElement.querySelector('.task-name').textContent = task.taskName;
                     
-                    // Display task grades
+                    // Display task grades with full details
                     taskElement.querySelector('.task-grade').textContent = 
                         `${task.studentTaskDegree || 0} / ${task.taskDegree || 0}`;
+                        
+                    // Add additional information about the task
+                    const taskInfo = document.createElement('div');
+                    taskInfo.className = 'task-additional-info mt-2';
+                    
+                    // Create a detailed breakdown of task scores
+                    let taskDetailsHTML = `
+                        <div class="task-score-details p-2 bg-light rounded mb-2">
+                            <div class="row">
+                                <div class="col-6"><strong>Main Grade:</strong> ${task.studentTaskDegree || 0}/${task.taskDegree || 0}</div>
+                                <div class="col-6"><strong>Task Type:</strong> ${task.taskType || 'Regular'}</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6"><strong>Additional Grade:</strong> ${task.additionalGrade || 0}</div>
+                                <div class="col-6"><strong>Total:</strong> ${(parseInt(task.studentTaskDegree || 0) + parseInt(task.additionalGrade || 0))}/${task.taskDegree || 0}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add any comments if available
+                    if (task.comments) {
+                        taskDetailsHTML += `
+                            <div class="task-comments p-2 bg-light rounded">
+                                <strong>Comments:</strong> ${task.comments}
+                            </div>
+                        `;
+                    }
+                    
+                    taskInfo.innerHTML = taskDetailsHTML;
+                    taskElement.querySelector('.task-header').after(taskInfo);
                     
                     taskElement.querySelector('.task-degree-info').textContent = 
                         `Task Grade`;
@@ -174,8 +212,7 @@ function renderStudentData(data) {
                         questionsToggle.style.cursor = 'default';
                     }
                     
-                    // Setup task submission UI
-                    setupTaskSubmission(taskElement, task);
+                    // La función setupTaskSubmission ha sido eliminada para el modo de visualización manual
                     
                     // Add task to the task list
                     taskList.appendChild(taskElement);
@@ -199,7 +236,7 @@ function renderStudentData(data) {
 }
 
 /**
- * Display task questions with individual answer fields for each question
+ * Display task questions in view-only mode with complete details and grades
  */
 function displayTaskQuestions(task, questionsContainer) {
     // Get the questions content area
@@ -229,7 +266,59 @@ function displayTaskQuestions(task, questionsContainer) {
     const questionsWrapper = document.createElement('div');
     questionsWrapper.className = 'questions-wrapper';
     
-    // Add each question with its own answer field
+    // Add task details card with complete information including all grades
+    const taskDetailsCard = document.createElement('div');
+    taskDetailsCard.className = 'card mb-4';
+    taskDetailsCard.innerHTML = `
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle mr-2"></i> Complete Task Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Task Name:</strong> ${task.taskName}</p>
+                    <p><strong>Description:</strong> ${task.taskDescription || 'Not available'}</p>
+                    <p><strong>Total Points:</strong> ${task.taskDegree || 100}</p>
+                    <p><strong>Task Type:</strong> ${task.taskType || 'Regular'}</p>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-header"><strong>Grade Details</strong></div>
+                        <div class="card-body p-2">
+                            <div class="mb-2"><strong>Main Grade:</strong> ${task.studentTaskDegree || 0} / ${task.taskDegree || 100}</div>
+                            <div class="mb-2"><strong>Additional Grade:</strong> ${task.additionalGrade || 0}</div>
+                            <div class="mb-2"><strong>Total Grade:</strong> ${(parseInt(task.studentTaskDegree || 0) + parseInt(task.additionalGrade || 0))} / ${task.taskDegree || 100}</div>
+                            <div class="mb-2"><strong>Status:</strong> 
+                                <span class="badge ${task.studentTaskDegree ? 'badge-success' : 'badge-warning'}">
+                                    ${task.studentTaskDegree ? 'Submitted' : 'Not Submitted'}
+                                </span>
+                            </div>
+                            <div><strong>Questions:</strong> ${questions.length}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Task comments section -->
+            <div class="task-comments-section mt-3">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0"><i class="fas fa-comments mr-2"></i> Comments</h6>
+                    </div>
+                    <div class="card-body">
+                        ${task.comments ? task.comments : 'No comments available for this task.'}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3 mb-0">
+                <i class="fas fa-eye mr-2"></i> <strong>View-Only Mode:</strong> This task is in view-only mode with complete details and grades. For manual submissions, please contact your instructor.
+            </div>
+        </div>
+    `;
+    questionsContent.appendChild(taskDetailsCard);
+    
+    // Add each question with its own answer field or view-only display
     questions.forEach((question, index) => {
         const questionText = question.text || question;
         const questionId = `question-${task._id || 'task'}-${index}`;
@@ -245,48 +334,67 @@ function displayTaskQuestions(task, questionsContainer) {
         const questionScore = task.answers && task.answers[index] ? task.answers[index].score : 0;
         const isAnswered = task.answers && task.answers[index] && task.answers[index].submitted;
         
-        // Build the question card content
+        // Build the question card content with enhanced information
         questionCard.innerHTML = `
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center ${isAnswered ? 'bg-light' : ''}">
                 <h6 class="mb-0">Question ${index + 1} <small>(${pointsPerQuestion} points)</small></h6>
-                <div class="question-status ${isAnswered ? 'text-success' : 'text-warning'}">
-                    ${isAnswered ? `<i class="fas fa-check-circle"></i> Submitted - Score: ${questionScore}/${pointsPerQuestion}` : '<i class="fas fa-clock"></i> Not submitted'}
+                <div class="question-status ${isAnswered ? 'text-success' : 'text-secondary'}">
+                    ${isAnswered ? `<i class="fas fa-check-circle"></i> Submitted - Score: ${questionScore}/${pointsPerQuestion}` : '<i class="fas fa-eye"></i> View Only'}
                 </div>
             </div>
             <div class="card-body">
-                <div class="question-text mb-3">${questionText}</div>
+                <div class="question-details mb-4">
+                    <h6 class="font-weight-bold mb-2">Question:</h6>
+                    <div class="p-3 bg-light rounded">${questionText}</div>
+                </div>
+                
+                ${isAnswered ? `
                 <div class="answer-section">
                     <div class="form-group">
-                        <label for="${questionId}" class="answer-label">Your Answer:</label>
-                        <textarea class="form-control question-answer" id="${questionId}" rows="3" placeholder="Type your answer here..." ${isAnswered ? 'disabled' : ''}>${questionAnswer}</textarea>
+                        <h6 class="font-weight-bold mb-2">Your Answer:</h6>
+                        <div class="p-3 bg-light rounded">${questionAnswer}</div>
                     </div>
-                    <button class="btn btn-primary btn-sm submit-question-answer" data-question-index="${index}" ${isAnswered ? 'disabled' : ''}>
-                        ${isAnswered ? 'Submitted' : 'Submit Answer'}
-                    </button>
                 </div>
-                ${isAnswered ? `
+                <div class="grade-details mt-3">
+                    <h6 class="font-weight-bold mb-2">Grade Details:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th>Score</th>
+                                <td>${questionScore} / ${pointsPerQuestion}</td>
+                            </tr>
+                            <tr>
+                                <th>Percentage</th>
+                                <td>${Math.round((questionScore/pointsPerQuestion) * 100)}%</td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td>
+                                    <span class="badge ${questionScore >= pointsPerQuestion * 0.7 ? 'badge-success' : questionScore >= pointsPerQuestion * 0.4 ? 'badge-warning' : 'badge-danger'}">
+                                        ${questionScore >= pointsPerQuestion * 0.7 ? 'Excellent' : questionScore >= pointsPerQuestion * 0.4 ? 'Good' : 'Needs Improvement'}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
                 <div class="ai-feedback mt-3">
+                    <h6 class="font-weight-bold mb-2">AI Feedback:</h6>
                     <div class="card">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0">AI Feedback</h6>
-                        </div>
                         <div class="card-body">
                             <div class="feedback-content">${questionFeedback}</div>
-                            <div class="feedback-score mt-2 font-weight-bold ${questionScore >= pointsPerQuestion * 0.7 ? 'text-success' : questionScore >= pointsPerQuestion * 0.4 ? 'text-warning' : 'text-danger'}">
+                            <div class="feedback-score mt-3 font-weight-bold ${questionScore >= pointsPerQuestion * 0.7 ? 'text-success' : questionScore >= pointsPerQuestion * 0.4 ? 'text-warning' : 'text-danger'}">
                                 ${questionScore >= pointsPerQuestion * 0.7 ? 'Great job! ' : questionScore >= pointsPerQuestion * 0.4 ? 'Good effort! ' : 'You can do better! '}
                                 ${questionScore}/${pointsPerQuestion} points awarded.
                             </div>
                         </div>
                     </div>
-                </div>` : ''}
+                </div>` : `
+                <div class="view-only-message alert alert-secondary">
+                    <i class="fas fa-eye mr-2"></i> This question is available for viewing only. For manual submissions, please contact your instructor.
+                </div>`}
             </div>
         `;
-        
-        // Add event listener to the submit button for this question
-        const submitButton = questionCard.querySelector('.submit-question-answer');
-        submitButton.addEventListener('click', function() {
-            handleQuestionSubmission(task, index, this);
-        });
         
         // Add to questions wrapper
         questionsWrapper.appendChild(questionCard);
@@ -295,12 +403,64 @@ function displayTaskQuestions(task, questionsContainer) {
     // Add questions wrapper to content
     questionsContent.appendChild(questionsWrapper);
     
-    // Add event listener to submit all answers button if present
+    // Add a summary card with overall performance
+    const summaryCard = document.createElement('div');
+    summaryCard.className = 'card mt-4';
+    
+    // Calculate overall performance
+    let answeredCount = 0;
+    let totalScore = 0;
+    
+    if (task.answers && Array.isArray(task.answers)) {
+        task.answers.forEach(answer => {
+            if (answer && answer.submitted) {
+                answeredCount++;
+                totalScore += answer.score || 0;
+            }
+        });
+    }
+    
+    const completionPercentage = Math.round((answeredCount / questions.length) * 100);
+    const gradePercentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
+    
+    summaryCard.innerHTML = `
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="fas fa-chart-pie mr-2"></i> Overall Performance Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="font-weight-bold">Completion:</h6>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar ${completionPercentage >= 70 ? 'bg-success' : completionPercentage >= 40 ? 'bg-warning' : 'bg-danger'}" 
+                             role="progressbar" style="width: ${completionPercentage}%" 
+                             aria-valuenow="${completionPercentage}" aria-valuemin="0" aria-valuemax="100">
+                            ${completionPercentage}%
+                        </div>
+                    </div>
+                    <p>${answeredCount} of ${questions.length} questions answered</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="font-weight-bold">Grade Performance:</h6>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar ${gradePercentage >= 70 ? 'bg-success' : gradePercentage >= 40 ? 'bg-warning' : 'bg-danger'}" 
+                             role="progressbar" style="width: ${gradePercentage}%" 
+                             aria-valuenow="${gradePercentage}" aria-valuemin="0" aria-valuemax="100">
+                            ${gradePercentage}%
+                        </div>
+                    </div>
+                    <p>Score: ${totalScore} / ${totalPoints} points</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    questionsContent.appendChild(summaryCard);
+    
+    // Remove any submit buttons that might exist
     const submitAllButton = questionsContainer.querySelector('.submit-all-answers');
     if (submitAllButton) {
-        submitAllButton.addEventListener('click', function() {
-            handleAllQuestionsSubmission(task, questionsContainer);
-        });
+        submitAllButton.remove(); // Eliminarlo completamente en lugar de ocultarlo
     }
     
     // Update overall task status
@@ -327,7 +487,7 @@ function updateTaskGrade(task, taskItem, totalPoints) {
 }
 
 /**
- * Update the overall status of a task based on question submissions
+ * Update the overall status of a task based on question submissions for view-only mode
  */
 function updateTaskOverallStatus(task, questionsContainer) {
     const statusElement = questionsContainer.querySelector('.task-overall-status');
@@ -363,402 +523,47 @@ function updateTaskOverallStatus(task, questionsContainer) {
         });
     }
     
-    // Show task completion status
+    // Mostrar el estado como vista previa (view-only) si no hay respuestas
     if (answeredCount === 0) {
-        statusElement.innerHTML = '<span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i> No questions answered</span>';
+        statusElement.innerHTML = '<span class="badge badge-secondary"><i class="fas fa-eye"></i> View Only - Manual Submission</span>';
     } else if (answeredCount < questions.length) {
-        statusElement.innerHTML = `<span class="badge badge-info"><i class="fas fa-spinner"></i> ${answeredCount}/${questions.length} questions answered</span>`;
+        statusElement.innerHTML = `<span class="badge badge-info"><i class="fas fa-spinner"></i> ${answeredCount}/${questions.length} questions answered - Manual Submission</span>`;
     } else {
-        // All questions answered
-        const percentage = (totalScore / totalPoints) * 100;
-        if (percentage >= 70) {
-            statusElement.innerHTML = `<span class="badge badge-success"><i class="fas fa-check-circle"></i> Completed with ${totalScore}/${totalPoints} points</span>`;
-        } else if (percentage >= 40) {
-            statusElement.innerHTML = `<span class="badge badge-primary"><i class="fas fa-check"></i> Completed with ${totalScore}/${totalPoints} points</span>`;
-        } else {
-            statusElement.innerHTML = `<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Completed with ${totalScore}/${totalPoints} points</span>`;
+        const percentageScore = (totalScore / totalPoints) * 100;
+        let badgeClass = 'badge-danger';
+        let icon = 'fa-times-circle';
+        
+        if (percentageScore >= 70) {
+            badgeClass = 'badge-success';
+            icon = 'fa-check-circle';
+        } else if (percentageScore >= 40) {
+            badgeClass = 'badge-primary';
+            icon = 'fa-info-circle';
         }
+        
+        statusElement.innerHTML = `<span class="badge ${badgeClass}"><i class="fas ${icon}"></i> All questions answered - Score: ${totalScore}/${totalPoints}</span>`;
     }
 }
 
 /**
- * Handle submission of a single question answer
+ * Función vacía para reemplazar la antigua función de envío individual
+ * El envío de tareas ahora es manual en lugar de automático
  */
-async function handleQuestionSubmission(task, questionIndex, submitButton) {
-    // Get the question card and answer
-    const questionCard = submitButton.closest('.question-card');
-    const answerInput = questionCard.querySelector('.question-answer');
-    const answer = answerInput.value.trim();
-    const questionStatus = questionCard.querySelector('.question-status');
-    const taskItem = questionCard.closest('.task-item');
-    
-    // Get user data
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    if (!userData) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Session Expired',
-            text: 'Please login again to continue.',
-            confirmButtonText: 'Login'
-        }).then(() => {
-            window.location.href = '/api/auth/Login';
-        });
-        return;
-    }
-    
-    // Validate answer
-    if (!answer) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Empty Answer',
-            text: 'Please enter your answer before submitting.',
-            confirmButtonText: 'OK'
-        });
-        return;
-    }
-    
-    // Disable submit button and show loading state
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Submitting...';
-    questionStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluating...';
-    questionStatus.className = 'question-status text-info';
-    
-    try {
-        // Get necessary information
-        const trackCard = taskItem.closest('.track-card');
-        const trackName = trackCard.querySelector('.track-name').textContent.trim();
-        const taskName = taskItem.querySelector('.task-name').textContent.trim();
-        const accessToken = localStorage.getItem('accessToken');
-        if (!accessToken) throw new Error('Access token not found');
-        
-        // Get task questions
-        let questions = [];
-        try {
-            if (task.Questions) questions = JSON.parse(task.Questions);
-        } catch (parseError) {
-            console.error('Error parsing questions:', parseError);
-        }
-        
-        // Calculate points per question
-        const totalPoints = task.taskDegree || 100;
-        const pointsPerQuestion = Math.floor(totalPoints / questions.length);
-        
-        // Log submission data
-        console.log('Submitting answer:', {
-            trackName, taskName, questionIndex, studentId: userData.id
-        });
-
-        // Submit answer to server
-        const response = await fetch('/api/students/submit-question-answer', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                trackName,
-                studentId: userData.id,
-                taskName,
-                answer,
-                questionIndex,
-                question: questions[questionIndex],
-                maxScore: pointsPerQuestion
-            })
-        });
-        
-        // Validate and parse response
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const errorText = await response.text();
-            console.error('Server returned non-JSON response:', errorText);
-            throw new Error('Server returned an invalid response format');
-        }
-        
-        const data = await response.json();
-        console.log('Server response:', data);
-        
-        // Handle HTTP errors
-        if (!response.ok) {
-            throw new Error(data.message || 'Error submitting answer');
-        }
-        
-        // Handle previously submitted question
-        if (data.alreadySubmitted) {
-            handlePreviouslySubmittedQuestion(task, questionCard, submitButton, answerInput, 
-                                              questionStatus, questionIndex, data, taskItem, totalPoints);
-            return;
-        }
-        
-        // Handle successful submission
-        if (data.score !== undefined) {
-            handleSuccessfulSubmission(task, questionCard, submitButton, answerInput, questionStatus,
-                                       questionIndex, data, taskItem, totalPoints, pointsPerQuestion);
-        } else if (data.message && data.message.includes('submitted successfully')) {
-            // Special case: Success but no score information
-            handleSuccessWithoutScore(submitButton, answerInput, questionCard, data);
-        } else {
-            // Unexpected response format
-            console.warn('Unexpected response format:', data);
-            throw new Error('Received an unexpected response format');
-        }
-    } catch (error) {
-        // Handle submission errors
-        console.error('Error submitting answer:', error);
-        
-        // Reset UI
-        submitButton.disabled = false;
-        submitButton.innerHTML = 'Submit Answer';
-        questionStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Submission failed';
-        questionStatus.className = 'question-status text-danger';
-        
-        // Show error message
-        Swal.fire({
-            icon: 'error',
-            title: 'Submission Failed',
-            text: error.message || 'An error occurred while submitting your answer. Please try again.',
-            confirmButtonText: 'OK'
-        });
-    }
+function handleQuestionSubmission(task, questionIndex, submitButton) {
+    // Esta función se mantiene vacía para compatibilidad con el código existente
+    console.log('El envío automático de preguntas ha sido desactivado.');
 }
 
-/**
- * Handle a previously submitted question
- */
-function handlePreviouslySubmittedQuestion(task, questionCard, submitButton, answerInput, questionStatus, 
-                                           questionIndex, data, taskItem, totalPoints) {
-    console.log('Question was already submitted before, showing previous results');
-    
-    // Update UI
-    questionCard.classList.add('submitted');
-    submitButton.disabled = true;
-    submitButton.innerHTML = 'Submitted';
-    answerInput.readOnly = true;
-    
-    // Display score and feedback
-    updateQuestionStatusDisplay(questionStatus, data.score, data.maxScore, data.feedback);
-    
-    // Update answers in memory
-    if (!task.answers) task.answers = [];
-    task.answers[questionIndex] = {
-        answer: answerInput.value.trim(),
-        feedback: data.feedback,
-        score: data.score,
-        submitted: true
-    };
-    
-    // Show informative message
-    Swal.fire({
-        icon: 'info',
-        title: 'Previously Submitted',
-        text: `This question was already submitted. Your score: ${data.score}/${data.maxScore}`,
-        confirmButtonText: 'OK'
-    });
-    
-    // Update task status and grade
-    updateTaskStatus(task, questionCard, taskItem, totalPoints);
-}
+// Las funciones auxiliares relacionadas con el envío automático han sido eliminadas
+// puesto que el envío ahora es manual
 
 /**
- * Handle a successful submission with score
+ * Función vacía para reemplazar la antigua función de envío múltiple
+ * El envío de tareas ahora es manual en lugar de automático
  */
-function handleSuccessfulSubmission(task, questionCard, submitButton, answerInput, questionStatus,
-                                    questionIndex, data, taskItem, totalPoints, pointsPerQuestion) {
-    // Update UI with score and feedback
-    updateQuestionStatusDisplay(questionStatus, data.score, data.maxScore, data.feedback);
-    
-    // Mark question as submitted
-    questionCard.classList.add('submitted');
-    submitButton.disabled = true;
-    submitButton.innerHTML = 'Submitted';
-    answerInput.readOnly = true;
-    
-    // Update answers in memory
-    if (!task.answers) task.answers = [];
-    task.answers[questionIndex] = {
-        answer: answerInput.value.trim(),
-        feedback: data.feedback,
-        score: data.score,
-        submitted: true
-    };
-    
-    // Update task status and grade
-    updateTaskStatus(task, questionCard, taskItem, totalPoints);
-    
-    // Show success message
-    Swal.fire({
-        icon: 'success',
-        title: 'Answer Submitted',
-        text: `Your answer has been evaluated. Score: ${data.score}/${pointsPerQuestion}`,
-        confirmButtonText: 'OK'
-    });
-}
-
-/**
- * Handle successful submission without score information
- */
-function handleSuccessWithoutScore(submitButton, answerInput, questionCard, data) {
-    // Update UI
-    submitButton.disabled = true;
-    submitButton.innerHTML = 'Submitted';
-    answerInput.readOnly = true;
-    questionCard.classList.add('submitted');
-    
-    // Show success message
-    Swal.fire({
-        icon: 'success',
-        title: 'Answer Submitted',
-        text: data.message || 'Your answer has been submitted successfully',
-        confirmButtonText: 'OK'
-    });
-}
-
-/**
- * Update the question status display with score and feedback
- */
-function updateQuestionStatusDisplay(questionStatus, score, maxScore, feedback) {
-    const scorePercentage = (score / maxScore) * 100;
-    let statusClass = 'text-danger';
-    
-    if (scorePercentage >= 80) {
-        statusClass = 'text-success';
-    } else if (scorePercentage >= 60) {
-        statusClass = 'text-primary';
-    } else if (scorePercentage >= 40) {
-        statusClass = 'text-warning';
-    }
-    
-    questionStatus.innerHTML = `
-        <div>
-            <strong>Score:</strong> ${score}/${maxScore}
-        </div>
-        <div class="mt-1">
-            <strong>Feedback:</strong> ${feedback}
-        </div>
-    `;
-    questionStatus.className = `question-status ${statusClass}`;
-}
-
-/**
- * Update task status and grade
- */
-function updateTaskStatus(task, questionCard, taskItem, totalPoints) {
-    // Get questions container
-    const questionsContainer = taskItem.querySelector('.questions-container') || 
-                              questionCard.closest('.questions-container');
-    
-    // Update task status if container exists
-    if (questionsContainer) {
-        updateTaskOverallStatus(task, questionsContainer);
-    }
-    
-    // Update task grade
-    updateTaskGrade(task, taskItem, totalPoints);
-}
-
-/**
- * Handle submission of all question answers at once
- */
-async function handleAllQuestionsSubmission(task, questionsContainer) {
-    // Get all question cards
-    const questionCards = questionsContainer.querySelectorAll('.question-card');
-    let unansweredQuestions = [];
-    
-    // Check if all questions have answers
-    questionCards.forEach((card, index) => {
-        const answerInput = card.querySelector('.question-answer');
-        const answer = answerInput.value.trim();
-        const submitButton = card.querySelector('.submit-question-answer');
-        
-        // If not already submitted and answer is empty, add to unanswered
-        if (!submitButton.disabled && !answer) {
-            unansweredQuestions.push(index + 1);
-        }
-    });
-    
-    // If there are unanswered questions, show warning
-    if (unansweredQuestions.length > 0) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Incomplete Submission',
-            html: `You haven't answered the following questions: <br><strong>${unansweredQuestions.join(', ')}</strong><br>Do you want to submit only the answered questions?`,
-            showCancelButton: true,
-            confirmButtonText: 'Submit Answered Only',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Submit only the answered questions
-                submitAnsweredQuestions();
-            }
-        });
-        return;
-    }
-    
-    // Submit all answered questions
-    submitAnsweredQuestions();
-    
-    // Function to submit all answered questions
-    async function submitAnsweredQuestions() {
-        let submissionPromises = [];
-        
-        // For each question card with an answer
-        questionCards.forEach((card) => {
-            const answerInput = card.querySelector('.question-answer');
-            const answer = answerInput.value.trim();
-            const submitButton = card.querySelector('.submit-question-answer');
-            const questionIndex = parseInt(card.dataset.questionIndex);
-            
-            // If not already submitted and has an answer
-            if (!submitButton.disabled && answer) {
-                // Trigger click on the submit button
-                submissionPromises.push(new Promise((resolve) => {
-                    // Simulate click with delay to prevent server overload
-                    setTimeout(() => {
-                        submitButton.click();
-                        resolve();
-                    }, questionIndex * 500); // Stagger submissions
-                }));
-            }
-        });
-        
-        // Wait for all submissions
-        if (submissionPromises.length > 0) {
-            Swal.fire({
-                title: 'Submitting Answers',
-                html: 'Please wait while your answers are being evaluated...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            
-            try {
-                await Promise.all(submissionPromises);
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Answers Submitted',
-                    text: 'All answers have been submitted and evaluated successfully.',
-                    confirmButtonText: 'OK'
-                });
-            } catch (error) {
-                console.error('Error in batch submission:', error);
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Submission Error',
-                    text: 'There was an error submitting some of your answers. Please check each question and try again where needed.',
-                    confirmButtonText: 'OK'
-                });
-            }
-        } else {
-            Swal.fire({
-                icon: 'info',
-                title: 'No New Submissions',
-                text: 'All questions have already been submitted or have no answers.',
-                confirmButtonText: 'OK'
-            });
-        }
-    }
+function handleAllQuestionsSubmission(task, questionsContainer) {
+    // Esta función se mantiene vacía para compatibilidad con el código existente
+    console.log('El envío automático de tareas ha sido desactivado.');
 }
 
 // Logout function

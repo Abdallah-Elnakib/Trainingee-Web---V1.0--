@@ -2,14 +2,12 @@
 const studentModal = document.getElementById('studentModal');
 const filterForm = document.getElementById('filterForm');
 
-// Action buttons
 const refreshBtn = document.getElementById('refreshData');
 const exportCsvBtn = document.getElementById('exportCsv');
 const closeModal = document.getElementById('closeModal');
 const closeModalBtn = document.querySelector('.close-modal');
 const exportStudentDataBtn = document.getElementById('exportStudentData');
 
-// Filter elements
 const trackFilter = document.getElementById('trackFilter');
 const statusFilter = document.getElementById('statusFilter');
 const searchFilter = document.getElementById('searchFilter');
@@ -18,7 +16,6 @@ const applyFiltersBtn = document.getElementById('applyFiltersBtn');
 const resetFiltersBtn = document.getElementById('resetFiltersBtn');
 const toggleFiltersBtn = document.getElementById('toggleFilters');
 
-// Table elements
 const studentsTableBody = document.getElementById('students-table-body');
 const studentCount = document.getElementById('studentCount');
 const loadingState = document.getElementById('loadingState');
@@ -26,7 +23,6 @@ const noStudentsMessage = document.getElementById('noStudentsMessage');
 const totalStudentsCount = document.getElementById('totalStudents');
 const activeStudentsCount = document.getElementById('activeStudents');
 
-// Pagination elements
 const paginationContainer = document.getElementById('pagination-container');
 const paginationPages = document.getElementById('paginationPages');
 const prevPageBtn = document.getElementById('prevPageBtn');
@@ -36,7 +32,6 @@ const startItem = document.getElementById('startItem');
 const endItem = document.getElementById('endItem');
 const totalItems = document.getElementById('totalItems');
 
-// Modal elements
 const modalTitle = document.getElementById('modalTitle');
 const studentName = document.getElementById('studentName');
 const studentId = document.getElementById('studentId');
@@ -46,7 +41,6 @@ const averageScore = document.getElementById('averageScore');
 const studentTracksList = document.getElementById('studentTracksList');
 const performanceStatsList = document.getElementById('performanceStatsList');
 
-// State variables
 let studentsData = [];
 let filteredStudents = [];
 let currentPage = 1;
@@ -55,7 +49,6 @@ let tabCharts = {};
 let currentStudentDetails = null;
 let cachedStudents = [];
 
-// Debug function to inspect object properties
 function inspectObject(obj, name = 'Object') {
     if (!obj) {
         console.log(`${name} is null or undefined`);
@@ -76,26 +69,19 @@ function inspectObject(obj, name = 'Object') {
     console.log(`Inspecting ${name}:`, props);
 }
 
-/**
- * Initialize the page and set up event listeners
- */
+
 function initializePage() {
     console.log('Initializing students page...');
 
-    // Load initial data
     loadStudentsData();
 
-    // Set up event listeners
     setupEventListeners();
 }
 
-/**
- * Set up all event listeners for interactive elements on the page
- */
+
 function setupEventListeners() {
     console.log('Setting up event listeners...');
 
-    // Filter form events
     if (filterForm) {
         if (applyFiltersBtn) {
             applyFiltersBtn.addEventListener('click', function () {
@@ -120,7 +106,6 @@ function setupEventListeners() {
         }
     }
 
-    // Table action buttons
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function () {
             console.log('Refresh data clicked');
@@ -132,7 +117,6 @@ function setupEventListeners() {
         });
     }
 
-    // Export functionality
     if (exportCsvBtn) {
         exportCsvBtn.addEventListener('click', function () {
             console.log('Export CSV clicked');
@@ -140,7 +124,6 @@ function setupEventListeners() {
         });
     }
 
-    // Pagination controls
     if (perPageSelect) {
         perPageSelect.addEventListener('change', function () {
             console.log('Items per page changed to: ' + this.value);
@@ -174,7 +157,6 @@ function setupEventListeners() {
         });
     }
 
-    // Modal events
     if (closeModal) {
         closeModal.addEventListener('click', function () {
             console.log('Close modal clicked');
@@ -198,7 +180,6 @@ function setupEventListeners() {
         });
     }
 
-    // Toggle filters visibility
     if (toggleFiltersBtn) {
         toggleFiltersBtn.addEventListener('click', function () {
             console.log('Toggle filters clicked');
@@ -211,7 +192,6 @@ function setupEventListeners() {
         });
     }
 
-    // Search input - search as you type (with debounce)
     let debounceTimeout;
     if (searchFilter) {
         searchFilter.addEventListener('input', function () {
@@ -219,11 +199,9 @@ function setupEventListeners() {
             debounceTimeout = setTimeout(() => {
                 console.log('Search input changed: ' + this.value);
                 applyFilters();
-            }, 500); // 500ms debounce
+            }, 500); 
         });
     }
-
-    // Global event listener for table sort headers
     document.querySelectorAll('th[data-sort]').forEach(header => {
         header.addEventListener('click', function () {
             const sortBy = this.getAttribute('data-sort');
@@ -232,7 +210,6 @@ function setupEventListeners() {
         });
     });
 
-    // Tab switching in modal
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', function () {
             const tabId = this.getAttribute('data-tab');
@@ -254,12 +231,9 @@ function setupEventListeners() {
         });
     });
 
-    // Toda la funcionalidad relacionada con detalles del estudiante ya está configurada
 
     console.log('Event listeners setup complete');
 }
-
-// Load students data from API
 function loadStudentsData(filters = {}) {
     showLoading(true);
 
@@ -284,7 +258,6 @@ function loadStudentsData(filters = {}) {
         credentials: 'same-origin'
     })
         .then(response => {
-            // If unauthorized, redirect to login page
             if (response.status === 401) {
                 console.log('Authentication error: Redirecting to login page');
                 window.location.href = '/login';
@@ -303,7 +276,6 @@ function loadStudentsData(filters = {}) {
                 throw new Error(data.message || 'Failed to load students data');
             }
 
-            // Use real data from API response
             studentsData = data.students || [];
 
             filteredStudents = [...studentsData];
@@ -338,60 +310,46 @@ function loadStudentsData(filters = {}) {
         });
 }
 
-// Use the track count from the API data
 function countStudentTracks() {
     console.log('DEBUG - All students data:', JSON.stringify(studentsData, null, 2));
 
-    // Log the track count for each student to identify the issue
     console.log('TRACK COUNT DEBUG:');
 
-    // CRITICAL FIX: Force reset any hardcoded track count values
     studentsData.forEach(student => {
         if (!student.Id) return;
 
-        // Log the raw data for this student
         console.log(`Student ID: ${student.Id}`);
         console.log(`Raw trackCount value: ${student.trackCount}`);
         console.log(`Track names: ${JSON.stringify(student.trackNames)}`);
 
-        // CRITICAL INSPECTION: Check for hardcoded values
         if (student.trackCount === 11) {
             console.warn(`WARNING: Found hardcoded track count of 11 for student ${student.Id}`);
         }
-
-        // CRITICAL FIX: Always recalculate trackCount based on trackNames
         if (Array.isArray(student.trackNames)) {
-            // Override any existing trackCount with the actual count from trackNames
             student.trackCount = student.trackNames.length;
             console.log(`RESET: Setting trackCount for ${student.Id} to ${student.trackCount} based on trackNames length`);
         } else if (student.trackInfo && student.trackInfo.trackName) {
-            // If we have trackInfo but no trackNames array, create one and set count to 1
             student.trackNames = [student.trackInfo.trackName];
             student.trackCount = 1;
             console.log(`RESET: Created trackNames array with one item for student ${student.Id}`);
         } else {
-            // If no track information at all, set to 0
             student.trackNames = [];
             student.trackCount = 0;
             console.log(`RESET: Student ${student.Id} has no track information, setting count to 0`);
         }
 
-        // Double verification
         console.log(`VERIFICATION: Student ${student.Id} now has trackCount=${student.trackCount} with tracks=${JSON.stringify(student.trackNames)}`);
         console.log('------------------------------');
     });
 }
 
-// Render students table with current page data
 function renderStudentsTable() {
     const tableBody = document.getElementById('students-table-body');
     tableBody.innerHTML = '';
 
-    // Calculate pagination offsets
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = Math.min(startIndex + itemsPerPage, filteredStudents.length);
 
-    // Show/hide empty state message
     if (filteredStudents.length === 0) {
         noStudentsMessage.style.display = 'flex';
         paginationContainer.style.display = 'none';
@@ -401,48 +359,39 @@ function renderStudentsTable() {
         paginationContainer.style.display = 'flex';
     }
 
-    // Populate table with data
     for (let i = startIndex; i < endIndex; i++) {
         const student = filteredStudents[i];
 
-        // Ensure trackNames is an array and trackCount is correct
         if (!Array.isArray(student.trackNames)) {
             student.trackNames = [];
         }
 
-        // Make sure trackCount matches the actual number of tracks
-        // This preserves the backend calculation but ensures consistency
+
         if (student.trackCount !== student.trackNames.length) {
             console.log(`Fixed track count for student ${student.Id}: API returned ${student.trackCount}, actual tracks: ${student.trackNames.length}`);
             student.trackCount = student.trackNames.length;
         }
 
-        // Create table row
         const row = document.createElement('tr');
 
-        // Determine status class
         let statusClass = 'status-pending';
         if (student.studentStatus === 'Accepted') statusClass = 'status-accepted';
         else if (student.studentStatus === 'Rejected') statusClass = 'status-rejected';
         else if (student.studentStatus === 'In Progress') statusClass = 'status-in-progress';
 
-        // Debug student object to see what's available
         console.log('Student object:', student);
         
-        // Format student ID - ensure we always have a value to display
-        // Try multiple possible ID fields and fallback to index if needed
+
         const studentId = student.Id || student.id || student._id || student.studentId || i;
         const formattedId = String(studentId).padStart(4, '0');
         
-        // Store the actual student index in the data array
-        // This ensures we can always get back to the right student
+
         const studentIndex = studentsData.findIndex(s => 
             (s.Id && student.Id && s.Id === student.Id) || 
             (s.id && student.id && s.id === student.id) || 
             (s === student)
         );
         
-        // Make sure ID is visible and has a noticeable style
         row.innerHTML = `
             <td>
                 <span class="student-id" style="font-weight: bold; color: #2c3e50;">#${formattedId}</span>
@@ -479,13 +428,11 @@ function renderStudentsTable() {
         tableBody.appendChild(row);
     }
 
-    // Update pagination info
     startItem.textContent = filteredStudents.length > 0 ? startIndex + 1 : 0;
     endItem.textContent = endIndex;
     totalItems.textContent = filteredStudents.length;
 }
 
-// Apply filters from form
 function applyFilters() {
     const track = trackFilter.value;
     const status = statusFilter.value;
@@ -493,31 +440,25 @@ function applyFilters() {
 
     console.log(`Applying filters: Track=${track}, Status=${status}, Search=${search}`);
 
-    // Load data from API with filters
     loadStudentsData({ track, status, search });
 }
 
-// Reset all filters
 function resetFilters() {
     trackFilter.value = 'all';
     statusFilter.value = 'all';
     searchFilter.value = '';
 
-    // Apply the reset filters
     applyFilters();
 }
 
-// Update student count display
 function updateStudentCount() {
     studentCount.textContent = `${filteredStudents.length} students`;
 }
 
-// Show/hide loading state
 function showLoading(show) {
     loadingState.style.display = show ? 'flex' : 'none';
 }
 
-// Show error message
 function showErrorMessage(message) {
     Swal.fire({
         icon: 'error',
@@ -526,18 +467,14 @@ function showErrorMessage(message) {
     });
 }
 
-// Setup pagination controls
 function setupPagination() {
     const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
 
-    // Reset pagination pages
     paginationPages.innerHTML = '';
 
-    // Update prev/next buttons state
     prevPageBtn.disabled = currentPage <= 1;
     nextPageBtn.disabled = currentPage >= totalPages;
 
-    // Generate page numbers
     const startPage = Math.max(1, currentPage - 2);
     const endPage = Math.min(totalPages, startPage + 4);
 
@@ -550,14 +487,12 @@ function setupPagination() {
     }
 }
 
-// Navigate to a specific page
 function navigateToPage(page) {
     currentPage = page;
     renderStudentsTable();
     setupPagination();
 }
 
-// Open student details modal
 function openStudentDetailsModal(studentIdOrIndex) {
     if (studentIdOrIndex === undefined || studentIdOrIndex === null) {
         showErrorMessage('Invalid student ID or index');
@@ -566,17 +501,12 @@ function openStudentDetailsModal(studentIdOrIndex) {
 
     console.log(`Opening details for student ID/index: ${studentIdOrIndex}`);
     
-    // Get the student directly from our cached data using the index
-    // This ensures we're working with the exact same student object that was displayed in the table
     let student;
     
-    // If studentIdOrIndex is a number and within the valid range of our student data array
     if (typeof studentIdOrIndex === 'number' && studentIdOrIndex >= 0 && studentIdOrIndex < studentsData.length) {
-        // Use it as an index into our data array
         student = studentsData[studentIdOrIndex];
         console.log('Found student by index:', student);
     } else {
-        // Try to find the student by ID in our cached data
         student = studentsData.find(s => 
             String(s.Id) === String(studentIdOrIndex) || 
             String(s.id) === String(studentIdOrIndex) || 
@@ -585,29 +515,28 @@ function openStudentDetailsModal(studentIdOrIndex) {
         console.log('Found student by ID:', student);
     }
     
-    // If we found the student in our cached data
+
     if (student) {
-        // Use the student object directly instead of making an API call
         displayStudentDetails(student);
-        return;
+        const hasTrackData = (Array.isArray(student.tracks) && student.tracks.length) ||
+                             (Array.isArray(student.trackInfo) && student.trackInfo.length) ||
+                             (Array.isArray(student.trackNames) && student.trackNames.length);
+        if (hasTrackData) {
+            return; 
+        }
     }
     
-    // Fallback to the original API approach if we couldn't find the student in cached data
-    // This part is similar to the original function but simplified
-    const studentId = studentIdOrIndex;
+   
+    const studentId = (student && (student._id || student.Id || student.id))
+        ? (student._id || student.Id || student.id)
+        : studentIdOrIndex;
     let formattedId = String(studentId).trim();
 
-    // Make the modal visible
     studentModal.classList.add('active');
     
-    // Reset and show the modal with proper null checking for all DOM elements
     if (modalTitle) modalTitle.textContent = 'Loading Student Details...';
     
-    // The student name and ID elements may not exist in the current DOM since we're now
-    // rebuilding the modal content completely. We'll skip these for now and handle them
-    // in the populateStudentDetails function.
-    
-    // Only attempt to set these values if the elements exist
+
     const studentIdElement = document.getElementById('studentId');
     if (studentIdElement) studentIdElement.textContent = formattedId;
     
@@ -615,7 +544,6 @@ function openStudentDetailsModal(studentIdOrIndex) {
     if (totalTasksCount) totalTasksCount.textContent = '-';
     if (averageScore) averageScore.textContent = '-';
 
-    // Clear previous content and show loading state if the element exists
     if (studentTracksList) {
         studentTracksList.innerHTML = `
             <div class="loading-spinner">
@@ -627,23 +555,18 @@ function openStudentDetailsModal(studentIdOrIndex) {
         console.log('studentTracksList element not found, this is expected with the new modal structure');
     }
 
-    // Clear performance stats list if it exists
     if (performanceStatsList) {
         performanceStatsList.innerHTML = '';
     } else {
         console.log('performanceStatsList element not found, this is expected with the new modal structure');
     }
 
-    // Show the modal - this is already done earlier in the function
-    // studentModal.classList.add('active');
-
-    // Only make an API call as a fallback if we couldn't find the student in our cached data
     const apiUrl = `/api/students/student-details/${studentId}`;
     console.log(`Fetching student details from: ${apiUrl}`);
 
     fetch(apiUrl, {
         method: 'GET',
-        credentials: 'include', // Include cookies for session-based auth
+        credentials: 'include', 
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -652,16 +575,13 @@ function openStudentDetailsModal(studentIdOrIndex) {
         .then(response => {
             console.log(`API response status: ${response.status} ${response.statusText}`);
             
-            // Clone the response so we can both read it as text and json
             const responseClone = response.clone();
             
             if (!response.ok) {
-                // If error, try to get the response text to show more details
                 responseClone.text().then(text => {
                     try {
-                        // Try to parse as JSON
                         const errorData = JSON.parse(text);
-                        // Save to localStorage for error display
+
                         localStorage.setItem('lastErrorResponse', text);
                         console.log('Saved error response:', errorData);
                     } catch (e) {
@@ -684,34 +604,26 @@ function openStudentDetailsModal(studentIdOrIndex) {
                 throw new Error(data.message || 'Failed to load student details');
             }
 
-            // Check data structure and get the correct student details
-            // The API might be returning data in different structures
             let studentDetails;
             if (data.data) {
-                // Standard structure
                 studentDetails = data.data;
             } else if (data.studentDetails) {
-                // Alternative structure
                 studentDetails = data.studentDetails;
             } else {
-                // Fallback to the entire response if neither structure is found
                 studentDetails = data;
             }
 
-            // Store current student details
             currentStudentDetails = studentDetails;
             console.log('Current student details:', currentStudentDetails);
 
-            // Update modal title
             modalTitle.textContent = 'Student Details';
 
-            // Populate student information
             displayStudentDetails(currentStudentDetails);
+            initializePerformanceChart(studentDetails);
         })
         .catch(error => {
             console.error('Error fetching student details:', error);
-            // Show error message in the modal - use studentTracksList instead of undefined studentDetailsContent
-            studentTracksList.innerHTML = `
+            if (studentTracksList) studentTracksList.innerHTML = `
                 <div class="error-container">
                     <div class="error-icon">
                         <i class="fas fa-exclamation-circle"></i>
@@ -721,37 +633,102 @@ function openStudentDetailsModal(studentIdOrIndex) {
                     <p>${error.message || 'Student with ID ' + formattedId + ' not found in any track'}</p>
                 </div>
             `;
-            
-            // Reset other UI elements to show the error state
-            if (studentName) studentName.textContent = 'Not Found';
-            if (document.getElementById('studentId')) document.getElementById('studentId').textContent = studentId;
-            if (totalTracksCount) totalTracksCount.textContent = '0';
-            if (totalTasksCount) totalTasksCount.textContent = '0';
-            if (averageScore) averageScore.textContent = '0';
-            if (performanceStatsList) performanceStatsList.innerHTML = '';
         });
 }
 
-// Close student details modal
+function initializePerformanceChart(details) {
+    if (!details) return;
+    const ctx = document.getElementById('performanceChart');
+    if (!ctx) return;
+
+    if (tabCharts.performance) {
+        tabCharts.performance.destroy();
+    }
+
+    let labels = [];
+    let scores = [];
+
+    if (details.tracks && details.tracks.length) {
+        labels = details.tracks.map(t => t.trackName || t.name || 'Track');
+        scores = details.tracks.map(t => {
+            const sd = t.studentData || {};
+            if (typeof sd.averageScore === 'number' && sd.averageScore !== 0) {
+                return Math.round(sd.averageScore);
+            }
+            if (typeof t.averageScore === 'number') {
+                return Math.round(t.averageScore);
+            }
+            const tasksArr = (sd.tasks && Array.isArray(sd.tasks)) ? sd.tasks : (t.tasks || []);
+            if (tasksArr.length) {
+                const sum = tasksArr.reduce((s, tk) => s + Number(tk.score || tk.Score || 0), 0);
+                return Math.round(sum / tasksArr.length);
+            }
+            return 0;
+        });
+    } else if (Array.isArray(details.studentInfo?.BasicTotal) && details.studentInfo.BasicTotal.length) {
+        labels = details.studentInfo.BasicTotal.map((_, idx) => `Task ${idx + 1}`);
+        scores = details.studentInfo.BasicTotal.map(bt => typeof bt === 'number' ? bt : Number(bt.score || bt.Score || 0));
+    }
+
+    if (labels.length === 0) {
+        labels = ['No Data'];
+        scores = [0];
+    }
+
+    tabCharts.performance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Score',
+                data: scores,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    const statsContainer = document.getElementById('performanceStatsList');
+    if (statsContainer) {
+        const maxScore = Math.max(...scores);
+        const minScore = Math.min(...scores);
+        const avgScore = scores.reduce((s, v) => s + v, 0) / scores.length || 0;
+        statsContainer.innerHTML = `
+            <div class="stat-item"><span class="stat-label">Highest Score:</span><span class="stat-value">${maxScore}</span></div>
+            <div class="stat-item"><span class="stat-label">Lowest Score:</span><span class="stat-value">${minScore}</span></div>
+            <div class="stat-item"><span class="stat-label">Average Score:</span><span class="stat-value">${Math.round(avgScore)}</span></div>
+        `;
+    }
+}
+
 function closeStudentModal() {
     studentModal.classList.remove('active');
     currentStudentDetails = null;
 
-    // Cleanup any charts
     if (tabCharts.performance) {
         tabCharts.performance.destroy();
         tabCharts.performance = null;
     }
 }
 
-// Helper function to display student details directly from cached data
 function displayStudentDetails(student) {
-    // Make the modal visible
     studentModal.classList.add('active');
     
-    // DO NOT clear the modal body - we need to keep the existing structure
-    
-    // Ensure we have valid student data
+
     if (!student) {
         console.error('No student data provided');
         if (modalBody) {
@@ -762,23 +739,23 @@ function displayStudentDetails(student) {
     
     console.log('Processing student data:', student);
     
-    // Format student ID
     const formattedId = String(student.Id || student.id || student._id || '').padStart(4, '0');
     
-    // Update modal title and basic information
     if (modalTitle) modalTitle.textContent = 'Student Details';
     if (studentName) studentName.textContent = student.Name || student.name || 'Unknown';
     if (document.getElementById('studentId')) {
         document.getElementById('studentId').textContent = formattedId;
     }
     
-    // Preserve the original structure of student data
-    // We need to make sure the data is in the format populateStudentDetails expects
+
     const detailsObject = {
         studentInfo: student,
         tracks: student.tracks || [],
         averageScore: student.averageScore || 0
     };
+    populateStudentDetails(detailsObject);
+}
+
 function populateStudentDetails(details) {
     if (!details) {
         showErrorMessage('Invalid student data received');
@@ -787,50 +764,74 @@ function populateStudentDetails(details) {
     
     console.log('Raw details received in populateStudentDetails:', details);
     
-    // Handle different API response structures
-    // If studentInfo is not present, try to use the data directly
+
     if (!details.studentInfo) {
         if (details.Name || details.name || details.StudentName || details.id || details.Id || details._id) {
             details = { studentInfo: details, tracks: details.tracks || [] };
         } else if (details.data && typeof details.data === 'object') {
-            // Some APIs wrap the actual data in a data property
             details = { studentInfo: details.data, tracks: details.data.tracks || [] };
         } else if (details.student && typeof details.student === 'object') {
-            // Some APIs put student info in a student property
             details = { studentInfo: details.student, tracks: details.tracks || details.student.tracks || [] };
         }
     }
 
     console.log('Populating student details:', details);
     
-    // Extract student information safely with defaults
     const student = details.studentInfo || {};
     
-    // Debug the student data structure
     console.log('Student object structure:', Object.keys(student));
     
-    // Extract tracks data and ensure it's an array
     let tracks = [];
-    if (details.tracks && Array.isArray(details.tracks)) {
+    if (details.tracks && Array.isArray(details.tracks) && details.tracks.length) {
         tracks = details.tracks;
-    } else if (student.tracks && Array.isArray(student.tracks)) {
+    } else if (student.tracks && Array.isArray(student.tracks) && student.tracks.length) {
         tracks = student.tracks;
-    } else if (student.Tracks && Array.isArray(student.Tracks)) {
+    } else if (student.Tracks && Array.isArray(student.Tracks) && student.Tracks.length) {
         tracks = student.Tracks;
+    } else if (Array.isArray(student.trackInfo) && student.trackInfo.length) {
+        tracks = student.trackInfo.map(ti => ({
+            name: ti.trackName || ti.name || 'Unknown Track',
+            description: ti.description || '',
+            status: ti.status || 'In Progress',
+            progress: ti.progress || 0,
+            tasks: ti.tasks || []
+        }));
+    } else if (Array.isArray(student.trackNames) && student.trackNames.length) {
+        tracks = student.trackNames.map(name => ({
+            name,
+            description: '',
+            status: 'In Progress',
+            progress: 0,
+            tasks: []
+        }));
+    }
+
+    if (tracks.length === 1 && Array.isArray(student.BasicTotal) && student.BasicTotal.length) {
+        const basicArr = student.BasicTotal;
+        const tasksDerived = basicArr.map((bt, idx) => {
+            if (typeof bt === 'number') {
+                return { name: `Task ${idx + 1}`, score: bt, status: 'Completed' };
+            }
+            return {
+                name: bt.name || `Task ${idx + 1}`,
+                score: bt.score || bt.Score || 0,
+                status: bt.status || bt.Status || 'Pending'
+            };
+        });
+        tracks[0].tasks = tasksDerived;
+        const completed = tasksDerived.filter(t => (t.status || '').toLowerCase() === 'completed').length;
+        tracks[0].progress = Math.round((completed / tasksDerived.length) * 100);
+        tracks[0].averageScore = Math.round(tasksDerived.reduce((s, t) => s + Number(t.score || 0), 0) / tasksDerived.length);
     }
     
     console.log('Tracks found:', tracks.length);
     
-    // Calculate tasks and progress information with defaults
     let totalTasks = 0;
     let completedTasks = 0;
     let averageScore = 0;
     
-    // Safely calculate task statistics
     if (tracks && tracks.length > 0) {
-        // Count total and completed tasks across all tracks
         tracks.forEach(track => {
-            // Handle different data structures for tasks
             let trackTasks = [];
             if (track.studentData && track.studentData.tasks && Array.isArray(track.studentData.tasks)) {
                 trackTasks = track.studentData.tasks;
@@ -841,20 +842,24 @@ function populateStudentDetails(details) {
             } else if (track.Tasks && Array.isArray(track.Tasks)) {
                 trackTasks = track.Tasks;
             } else {
-                // Default to empty array if no tasks are found
                 trackTasks = [];
             }
             
-            // Update total and completed tasks
-            totalTasks += trackTasks.length;
-            completedTasks += trackTasks.filter(task => 
-                task.status === 'Completed' || 
-                task.Status === 'Completed' || 
-                task.completed || 
-                task.Completed
-            ).length;
+            if (trackTasks.length > 0) {
+                totalTasks += trackTasks.length;
+                completedTasks += trackTasks.filter(task =>
+                    task.status === 'Completed' ||
+                    task.Status === 'Completed' ||
+                    task.completed ||
+                    task.Completed
+                ).length;
+            } else {
+                const trackTotal = track.totalTasks || track.TotalTasks || track.tasksCount || 0;
+                const trackCompleted = track.completedTasks || track.CompletedTasks || track.completed || 0;
+                totalTasks += trackTotal;
+                completedTasks += trackCompleted;
+            }
             
-            // Calculate track average score if available
             if (trackTasks.length > 0) {
                 const trackScores = trackTasks.map(task => task.score || task.Score || 0);
                 const trackAverage = trackScores.reduce((sum, score) => sum + score, 0) / trackScores.length;
@@ -862,20 +867,15 @@ function populateStudentDetails(details) {
             }
         });
         
-        // Calculate overall average score - get it from multiple possible sources
         if (totalTasks > 0 && completedTasks > 0) {
-            // If tracks have detailed data, calculate average from tracks
             averageScore = Math.round((tracks.reduce((sum, track) => 
                 sum + (track.averageScore || track.score || 0), 0)) / (tracks.length || 1));
         }
         
-        // Try alternative sources for statistics
         if (averageScore === 0) {
-            // Try to get directly from details object
             averageScore = details.averageScore || details.score || student.averageScore || student.score || 0;
         }
         
-        // Ensure we have some values for the UI
         if (totalTasks === 0) {
             totalTasks = details.totalTasks || student.totalTasks || tracks.length * 4 || 0;
         }
@@ -883,17 +883,20 @@ function populateStudentDetails(details) {
         if (completedTasks === 0) {
             completedTasks = details.completedTasks || student.completedTasks || 0;
         }
+    } else if (Array.isArray(student.BasicTotal) && student.BasicTotal.length) {
+        totalTasks = student.BasicTotal.length;
+        completedTasks = student.BasicTotal.filter(t => (t.status || t.Status || '').toLowerCase() === 'completed').length;
+        averageScore = Math.round(
+            student.BasicTotal.reduce((sum, task) => sum + Number(task.score || task.Score || 0), 0) / totalTasks
+        );
     } else {
-        // Fallback to API provided values if tracks don't have detailed task info
-        totalTasks = details.totalTasks || 0;
-        completedTasks = details.completedTasks || 0;
-        averageScore = details.averageScore || 0;
+        totalTasks = details.totalTasks || student.totalTasks || 0;
+        completedTasks = details.completedTasks || student.completedTasks || 0;
+        averageScore = details.averageScore || student.averageScore || 0;
     }
     
-    // Overall completion progress
     const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-    // Update the student information in the modal
+    const completionRate = overallProgress; 
     const studentNameElement = document.getElementById('studentName');
     if (studentNameElement) {
         studentNameElement.textContent = student.Name || student.name || 'Unknown';
@@ -904,11 +907,9 @@ function populateStudentDetails(details) {
         studentIdElement.textContent = String(student.Id || student.id || student._id || '').padStart(4, '0');
     }
     
-    // Calculate and display student statistics
     const avgScoreDisplay = Math.round(averageScore);
     const tracksCount = tracks.length || 1;
     
-    // Update statistics in the UI
     const totalTracksCountElement = document.getElementById('totalTracksCount');
     if (totalTracksCountElement) {
         totalTracksCountElement.textContent = tracksCount;
@@ -924,7 +925,6 @@ function populateStudentDetails(details) {
         averageScoreElement.textContent = avgScoreDisplay || 0;
     }
     
-    // Update additional student information
     const studentEmailElement = document.getElementById('studentEmail');
     if (studentEmailElement) {
         studentEmailElement.textContent = student.Email || student.email || '-';
@@ -950,7 +950,6 @@ function populateStudentDetails(details) {
         studentStatusElement.textContent = student.Status || student.status || 'Active';
     }
     
-    // Update enrolled tracks tab content
     const studentTracksList = document.getElementById('studentTracksList');
     if (studentTracksList) {
         if (tracks && tracks.length > 0) {
@@ -984,28 +983,23 @@ function populateStudentDetails(details) {
         }
     }
     
-    // Update performance chart if needed
     const performanceChart = document.getElementById('performanceChart');
-    if (performanceChart && tracks && tracks.length > 0) {
+    if (performanceChart && tracks && tracks.length > 0 && typeof setupPerformanceChart === 'function') {
+        const score = avgScoreDisplay;
         setupPerformanceChart(student, tracks);
-        if (score >= 60) return 'average';
-        return 'poor';
     }
 
-    // Create content for Overview tab with more robust error handling
-    const overviewTab = document.getElementById('tab-overview');
+    const overviewTab = document.getElementById('overview-tab');
     if (!overviewTab) {
         console.error('Overview tab element not found');
         return;
     }
     
-    // Handle tracks display safely
     const trackBadges = tracks.map(track => {
         const trackName = track.trackName || track.name || 'Unknown Track';
         return `<span class="track-badge">${trackName}</span>`;
     }).join('');
     
-    // Create the overview tab content with basic student info
     overviewTab.innerHTML = `
         <div class="overview-summary">
             <div class="overview-card">
@@ -1059,8 +1053,7 @@ function populateStudentDetails(details) {
         </div>
     `;
     
-    // Create track list container for enrolled tracks tab with error handling
-    const enrolledTracksTab = document.getElementById('tab-enrolledTracks');
+    const enrolledTracksTab = document.getElementById('tracks-tab');
     if (!enrolledTracksTab) {
         console.error('Enrolled tracks tab element not found');
     } else {
@@ -1068,10 +1061,8 @@ function populateStudentDetails(details) {
         tracksList.className = 'tracks-list';
         enrolledTracksTab.appendChild(tracksList);
         
-        // Make sure the tracks tab has content
         console.log('Rendering tracks to tab:', tracks.length);
         
-        // If no tracks, show empty state
         if (!tracks || tracks.length === 0) {
             tracksList.innerHTML = `
                 <div class="empty-state">
@@ -1083,15 +1074,12 @@ function populateStudentDetails(details) {
                 </div>
             `;
         } else {
-            // Build detailed track cards with task information
             tracks.forEach(track => {
                 if (!track) return;
                 
-                // Safe access to track data with a variety of possible structures
                 const trackName = track.trackName || track.name || 'Unknown Track';
                 const trackDescription = track.description || 'No description available';
                 
-                // Get tasks with handling for different data structures
                 let trackTasks = [];
                 if (track.studentData && track.studentData.tasks && Array.isArray(track.studentData.tasks)) {
                     trackTasks = track.studentData.tasks;
@@ -1105,7 +1093,6 @@ function populateStudentDetails(details) {
                     trackTasks = track.BasicTotal;
                 }
                 
-                // Calculate completion statistics
                 const totalTaskCount = trackTasks.length;
                 const completedTasksCount = trackTasks.filter(task => {
                     if (!task) return false;
@@ -1121,7 +1108,6 @@ function populateStudentDetails(details) {
                     );
                 }).length;
                 
-                // Calculate progress and average score
                 const progress = totalTaskCount > 0 ? Math.round((completedTasksCount / totalTaskCount) * 100) : 0;
                 let averageScore = 0;
                 
@@ -1141,11 +1127,9 @@ function populateStudentDetails(details) {
                 
                 const scoreClass = getScoreClass(averageScore);
                 
-                // Create a detailed track card with task information
                 const trackCard = document.createElement('div');
                 trackCard.className = 'track-card';
                 
-                // Build track header
                 const trackHeader = document.createElement('div');
                 trackHeader.className = 'track-card-header';
                 trackHeader.innerHTML = `
@@ -1156,7 +1140,6 @@ function populateStudentDetails(details) {
                     </div>
                 `;
                 
-                // Build track progress section
                 const trackProgress = document.createElement('div');
                 trackProgress.className = 'track-progress';
                 trackProgress.innerHTML = `
@@ -1179,15 +1162,12 @@ function populateStudentDetails(details) {
                     </div>
                 `;
                 
-                // Build tasks list with scores
                 const tasksList = document.createElement('div');
                 tasksList.className = 'track-tasks-list';
                 
-                // Create expandable tasks section
                 const tasksSection = document.createElement('div');
                 tasksSection.className = 'tasks-section';
                 
-                // Create tasks header with toggle functionality
                 const tasksHeader = document.createElement('div');
                 tasksHeader.className = 'tasks-header';
                 tasksHeader.innerHTML = `
@@ -1195,11 +1175,9 @@ function populateStudentDetails(details) {
                     <button class="toggle-tasks"><i class="fas fa-chevron-up"></i></button>
                 `;
                 
-                // Create tasks content - expanded by default
                 const tasksContent = document.createElement('div');
                 tasksContent.className = 'tasks-content expanded';
                 
-                // Check if there are tasks to display
                 if (trackTasks.length === 0) {
                     tasksContent.innerHTML = `
                         <div class="empty-tasks">
@@ -1207,7 +1185,6 @@ function populateStudentDetails(details) {
                         </div>
                     `;
                 } else {
-                    // Generate tasks table
                     let tasksHtml = `
                         <table class="tasks-table">
                             <thead>
@@ -1221,21 +1198,17 @@ function populateStudentDetails(details) {
                             <tbody>
                     `;
                     
-                    // Add each task to the table
                     trackTasks.forEach((task, index) => {
                         if (!task) return;
                         
-                        // Extract task data with flexible field names
                         const taskName = task.taskName || task.name || task.title || `Task ${index + 1}`;
                         
-                        // Determine task score
                         const taskScore = 
                             Number(task.studentTaskDegree || 0) || 
                             Number(task.degreeValue || 0) || 
                             Number(task.degree || 0) || 
                             Number(task.score || 0);
                         
-                        // Determine task status
                         let taskStatus = 'Not Started';
                         let statusClass = 'not-started';
                         
@@ -1251,10 +1224,8 @@ function populateStudentDetails(details) {
                             statusClass = 'in-progress';
                         }
                         
-                        // Task score class
                         const taskScoreClass = taskScore >= 0 ? getScoreClass(taskScore) : '';
                         
-                        // Add task row
                         tasksHtml += `
                             <tr>
                                 <td>${index + 1}</td>
@@ -1273,12 +1244,10 @@ function populateStudentDetails(details) {
                     tasksContent.innerHTML = tasksHtml;
                 }
                 
-                // Assemble tasks section
                 tasksSection.appendChild(tasksHeader);
                 tasksSection.appendChild(tasksContent);
                 tasksList.appendChild(tasksSection);
                 
-                // Add event listener for toggle
                 setTimeout(() => {
                     const toggleButton = tasksSection.querySelector('.toggle-tasks');
                     if (toggleButton) {
@@ -1290,7 +1259,6 @@ function populateStudentDetails(details) {
                     }
                 }, 0);
                 
-                // Assemble the track card
                 trackCard.appendChild(trackHeader);
                 trackCard.appendChild(trackProgress);
                 trackCard.appendChild(tasksList);
@@ -1300,14 +1268,12 @@ function populateStudentDetails(details) {
         }
     }
     
-    // Add content to performance tab with full error handling
-    const performanceTab = document.getElementById('tab-performance');
+    const performanceTab = document.getElementById('performance-tab');
     if (!performanceTab) {
         console.error('Performance tab element not found');
         return;
     }
     
-    // Early return if no tracks available
     if (!tracks || tracks.length === 0) {
         performanceTab.innerHTML = `
             <div class="empty-state">
@@ -1323,14 +1289,12 @@ function populateStudentDetails(details) {
     
     console.log('Building performance display for', tracks.length, 'tracks');
     
-    // Generate track completion chart HTML with robust error handling
     const trackBarsHtml = tracks.map(track => {
         let progress = 0;
         let taskCount = 0;
         let completedCount = 0;
         const trackName = track.trackName || track.name || 'Unknown Track';
         
-        // Calculate progress based on tasks with full data structure support
         let trackTasks = [];
         if (track.studentData && track.studentData.tasks && Array.isArray(track.studentData.tasks)) {
             trackTasks = track.studentData.tasks;
@@ -1346,7 +1310,6 @@ function populateStudentDetails(details) {
         
         taskCount = trackTasks.length;
         
-        // Count completed tasks with flexible score field detection
         completedCount = trackTasks.filter(task => {
             if (!task) return false;
             return (
@@ -1361,10 +1324,8 @@ function populateStudentDetails(details) {
             );
         }).length;
         
-        // Calculate progress percentage safely
         progress = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
         
-        // Return the chart bar HTML
         return `
             <div class="chart-bar-container">
                 <div class="chart-label">${trackName}</div>
@@ -1376,10 +1337,8 @@ function populateStudentDetails(details) {
         `;
     }).join('');
     
-    // Get score class for styling
     const scoreClass = getScoreClass(averageScore);
     
-    // Build performance dashboard HTML with better error handling
     performanceTab.innerHTML = `
         <div class="performance-dashboard">
             <div class="performance-summary">
@@ -1413,14 +1372,12 @@ function populateStudentDetails(details) {
         </div>
     `;
     
-    // Setup chart container for future use
     const chartContainer = document.createElement('div');
     chartContainer.className = 'performance-chart-wrapper';
     chartContainer.innerHTML = '<canvas id="performanceChart"></canvas>';
     performanceTab.appendChild(chartContainer);
 }
 
-// Render tracks list in the student details modal
 function renderStudentTracks(tracks, container) {
     if (!container) {
         console.error('No container specified for tracks list');
@@ -1444,7 +1401,6 @@ function renderStudentTracks(tracks, container) {
 
     container.innerHTML = '';
 
-    // Display info about multiple tracks
     if (tracks.length > 1) {
         const trackInfoSummary = document.createElement('div');
         trackInfoSummary.className = 'track-count-summary';
@@ -1457,7 +1413,6 @@ function renderStudentTracks(tracks, container) {
         container.appendChild(trackInfoSummary);
     }
 
-    // Sort tracks by start date (newest first)
     tracks.sort((a, b) => {
         const dateA = new Date(a.trackStartDate || 0);
         const dateB = new Date(b.trackStartDate || 0);
@@ -1469,7 +1424,6 @@ function renderStudentTracks(tracks, container) {
     container.appendChild(tracksList);
 
     tracks.forEach(track => {
-        // Use the progress directly from the API response
         const progressPercentage = track.studentData?.progress || 0;
         const averageScore = track.studentData?.averageScore || 0;
         const totalTasks = track.studentData?.totalTasks || 0;
@@ -1479,15 +1433,12 @@ function renderStudentTracks(tracks, container) {
         
         console.log(`Track ${track.trackName}: Progress=${progressPercentage}, Score=${averageScore}, Tasks=${completedTasks}/${totalTasks}`);
 
-        // Create track card
         const trackCard = document.createElement('div');
         trackCard.className = 'track-card';
 
-        // Track header
         const trackHeader = document.createElement('div');
         trackHeader.className = 'track-header';
 
-        // Track title and status
         const trackTitle = document.createElement('div');
         trackTitle.className = 'track-title';
         trackTitle.innerHTML = `
@@ -1497,7 +1448,6 @@ function renderStudentTracks(tracks, container) {
             </span>
         `;
 
-        // Track dates
         const trackDates = document.createElement('div');
         trackDates.className = 'track-dates';
         
@@ -1509,16 +1459,13 @@ function renderStudentTracks(tracks, container) {
             <div><i class="fas fa-calendar-check"></i> End: ${endDate}</div>
         `;
 
-        // Add header elements
         trackHeader.appendChild(trackTitle);
         trackHeader.appendChild(trackDates);
         trackCard.appendChild(trackHeader);
 
-        // Track stats
         const trackStats = document.createElement('div');
         trackStats.className = 'track-stats';
         
-        // Get appropriate classes for progress and score
         const progressClass = getScoreClass(progressPercentage);
         const scoreClass = getScoreClass(averageScore);
 
@@ -1542,9 +1489,7 @@ function renderStudentTracks(tracks, container) {
 
         trackCard.appendChild(trackStats);
 
-        // Track content (tasks, comments)
         if (track.studentData) {
-            // Comments section
             if (comments && comments.length > 0) {
                 const commentsSection = document.createElement('div');
                 commentsSection.className = 'track-comments';
@@ -1566,15 +1511,12 @@ function renderStudentTracks(tracks, container) {
                 trackCard.appendChild(commentsSection);
             }
 
-            // Tasks section
             if (tasks && tasks.length > 0) {
                 const tasksSection = document.createElement('div');
                 tasksSection.className = 'track-tasks';
                 
-                // Create header
                 tasksSection.innerHTML = `<h5><i class="fas fa-tasks"></i> Tasks (${tasks.length})</h5>`;
                 
-                // Create table for tasks
                 const tasksTable = document.createElement('div');
                 tasksTable.className = 'tasks-table';
                 
@@ -2080,7 +2022,6 @@ function sortStudents(column) {
     setupPagination();
 }
 
-// Helper function to calculate average score from tasks
 function calculateAverageScoreFromTasks(tasks) {
     if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
         return 0;
@@ -2099,7 +2040,6 @@ function calculateAverageScoreFromTasks(tasks) {
     return scorePoints > 0 ? Math.round(totalScore / scorePoints) : 0;
 }
 
-// Helper function to get CSS class based on score percentage
 function getScoreClass(score) {
     if (score >= 90) return 'score-excellent';
     if (score >= 80) return 'score-good';
@@ -2108,7 +2048,6 @@ function getScoreClass(score) {
     return 'score-poor';
 }
 
-// Helper function to get CSS class for task scores
 function getTaskScoreClass(studentScore, maxScore) {
     if (!maxScore || maxScore <= 0) return 'score-na';
 
@@ -2122,8 +2061,7 @@ function getTaskScoreClass(studentScore, maxScore) {
     return 'score-zero';
 }
 
-// Initialize the page when DOM is loaded
-// Add CSS for collapsed filters
+
 const style = document.createElement('style');
 style.textContent = `
     .filters-body.collapsed {
@@ -2150,7 +2088,7 @@ logout.addEventListener("click", function () {
             Swal.fire({
                 icon: 'error',
                 title: 'Logout Failed',
-                text: 'Failed to log out!',
+                text: 'Failed to logout!',
             });
         }
     })

@@ -36,7 +36,6 @@ router.get('/student-details/:studentId', getStudentDetails as any);
 router.get('/student-data/:studentId', getStudentData);
 
 router.post('/submit-task-answer', submitTaskAnswer);
-// Asegurarse de que esta ruta funcione correctamente
 router.post('/submit-question-answer', submitQuestionAnswer as any);
 router.post('/add-student-account', addNewStudentAccount);
 
